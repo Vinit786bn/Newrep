@@ -426,6 +426,7 @@
         }
 
         // 📋 DYNAMIC VERTICALLY STACKED CATEGORIZATION PARSER ENGINE
+       // 📋 DYNAMIC VERTICALLY STACKED CATEGORIZATION PARSER ENGINE
         function renderMenu() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
@@ -452,7 +453,7 @@
             // Stream through categories one below another
             for (let catKey in menuCategories) {
                 const catItems = menuData.filter(item => item.cat === catKey);
-                if (catItems.length === 0) continue; // Skip displaying category row if empty
+                if (catItems.length === 0) continue; 
 
                 // Generate full-width section title row breaks
                 const sectionHeader = document.createElement('div');
@@ -462,12 +463,25 @@
 
                 // Inject child item arrays neatly within columns under their parent category heading
                 catItems.forEach(item => {
+                    // Check if this specific item is currently sitting inside your active order cart
+                    const cartItem = cart.find(c => c.id === item.id);
+                    const isInCart = !!cartItem;
+                    const qty = isInCart ? cartItem.qty : 0;
+
                     const btn = document.createElement('button');
-                    btn.className = "bg-zinc-900 hover:bg-zinc-800 text-left p-3 rounded-xl border border-zinc-800 transition active:scale-[0.95] flex flex-col justify-between h-24 shadow-sm";
+                    // Dynamic Style: Swaps border to brand red and adds micro-glow ring if item is active
+                    btn.className = `text-left p-3 rounded-xl border transition active:scale-[0.95] flex flex-col justify-between h-24 shadow-sm relative ${
+                        isInCart 
+                        ? 'bg-zinc-800/60 border-red-600 ring-1 ring-red-600/20' 
+                        : 'bg-zinc-900 border-zinc-800'
+                    }`;
                     btn.onclick = () => addToCart(item);
                     btn.innerHTML = `
-                        <span class="font-medium text-sm text-white leading-snug">${item.name}</span>
-                        <span class="text-red-500 font-bold text-sm">₹${item.price}</span>
+                        <span class="font-medium text-sm text-white leading-snug pr-6">${item.name}</span>
+                        <div class="flex justify-between items-center w-full mt-1">
+                            <span class="text-red-500 font-bold text-sm">₹${item.price}</span>
+                            ${isInCart ? `<span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md absolute top-2 right-2 shadow-sm animate-pulse">x${qty}</span>` : ''}
+                        </div>
                     `;
                     container.appendChild(btn);
                 });
@@ -510,11 +524,12 @@
             updateCartUI();
         }
 
-        function updateCartUI() {
+      function updateCartUI() {
             const container = document.getElementById('cart-items');
             if (cart.length === 0) {
                 container.innerHTML = `<p class="text-white/40 italic text-center pt-12">Cart is empty. Select items to begin.</p>`;
                 document.getElementById('cart-total').innerText = '0';
+                renderMenu(); // <-- Added: Clears item highlights instantly when cart is emptied
                 return;
             }
             container.innerHTML = '';
@@ -541,6 +556,7 @@
                 container.appendChild(row);
             });
             document.getElementById('cart-total').innerText = total;
+            renderMenu(); // <-- Added: Refreshes highlights and quantity counts instantly on click
         }
 
         function handleSaveBill() {
