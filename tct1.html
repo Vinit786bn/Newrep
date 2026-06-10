@@ -96,6 +96,16 @@
 
                 <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
                     <h2 class="text-lg font-bold mb-3 text-gray-200">Live Active Tables</h2>
+                    <div class="flex justify-between items-center bg-gray-900/80 p-3 rounded-xl mb-3 border border-gray-700 shadow-inner">
+    <div>
+        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Active Bills</p>
+        <p class="text-2xl font-black text-white leading-none mt-1" id="dashboard-bill-count">0</p>
+    </div>
+    <div class="text-right">
+        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Live Revenue</p>
+        <p class="text-2xl font-black text-emerald-400 leading-none mt-1">₹<span id="dashboard-total-revenue">0</span></p>
+    </div>
+</div>
                     <div id="global-bills-container" class="space-y-2 max-h-[300px] overflow-y-auto">
                         <p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>
                     </div>
@@ -474,16 +484,30 @@
                 .catch(err => alert("Sync Failure: " + err.message));
         }
 
-        function renderSavedBillsDashboard(bills) {
+       function renderSavedBillsDashboard(bills) {
             const container = document.getElementById('global-bills-container');
+            const countTracker = document.getElementById('dashboard-bill-count');
+            const revenueTracker = document.getElementById('dashboard-total-revenue');
+
+            // If there are no bills, reset trackers to 0
             if (!bills) {
                 container.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
+                if (countTracker) countTracker.innerText = '0';
+                if (revenueTracker) revenueTracker.innerText = '0';
                 return;
             }
 
             container.innerHTML = '';
+            let totalBillsCount = 0;
+            let totalRevenue = 0;
+
             for (let id in bills) {
                 const bill = bills[id];
+                
+                // Add to the live math trackers
+                totalBillsCount++;
+                totalRevenue += bill.total;
+
                 const div = document.createElement('div');
                 div.className = "bg-gray-900/40 border border-gray-800 p-3 rounded-xl flex justify-between items-center text-sm hover:border-gray-700 transition";
                 div.innerHTML = `
@@ -496,7 +520,7 @@
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
                         <span class="font-bold text-white">₹${bill.total}</span>
-                       <div class="flex gap-1">
+                        <div class="flex gap-1">
                             <button onclick="printReceipt('${id}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold border border-blue-600/30 transition">Print</button>
                             <button onclick="loadBillBackToCart('${id}')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-gray-700 transition">Edit</button>
                             <button onclick="settleBillClearance('${id}')" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold border border-emerald-600/30 transition">Settle</button>
@@ -505,6 +529,10 @@
                 `;
                 container.appendChild(div);
             }
+
+            // Update the HTML dashboard numbers
+            if (countTracker) countTracker.innerText = totalBillsCount;
+            if (revenueTracker) revenueTracker.innerText = totalRevenue;
         }
 
         function loadBillBackToCart(id) {
