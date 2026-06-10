@@ -32,14 +32,14 @@
         .bg-green-500 { background-color: #22c55e !important; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+<body class="bg-black text-white min-h-screen font-sans">
 
-    <div id="login-screen" class="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center p-6 z-50">
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-gray-700">
-            <h1 class="text-3xl font-extrabold text-amber-500 mb-2">The Chinese Table</h1>
-            <p class="text-gray-400 mb-8 text-sm">Unified Restaurant POS Terminal</p>
+    <div id="login-screen" class="fixed inset-0 bg-black flex flex-col items-center justify-center p-6 z-50">
+        <div class="bg-zinc-900 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-zinc-800">
+            <h1 class="text-3xl font-extrabold text-red-600 mb-2 tracking-wide uppercase italic">The Chinese Table</h1>
+            <p class="text-white text-xs mb-8 uppercase tracking-widest opacity-80">Unified Restaurant POS Terminal</p>
             
-            <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-md">
+            <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.227C18.241 1.483 15.42 0 12.24 0 5.48 0 0 5.48 0 12s5.48 12 12.24 12c7.05 0 11.748-4.956 11.748-11.96 0-.802-.085-1.415-.188-1.755H12.24z"/>
                 </svg>
@@ -48,66 +48,63 @@
         </div>
     </div>
 
-
-    <div id="waiting-room" class="hidden fixed inset-0 bg-gray-900 flex flex-col items-center justify-center p-6 z-50">
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-md text-center border border-amber-600">
-            <h2 class="text-2xl font-bold text-amber-500 mb-4">Awaiting Admin Approval</h2>
-            <p class="text-gray-300 mb-6 text-sm leading-relaxed">Your account has been registered. Please ask the manager to approve your access terminal.</p>
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-6"></div>
-            <button onclick="logoutUser()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/40 px-5 py-2.5 rounded-xl font-medium transition w-full">
+    <div id="waiting-room" class="hidden fixed inset-0 bg-black flex flex-col items-center justify-center p-6 z-50">
+        <div class="bg-zinc-900 p-8 rounded-2xl shadow-2xl max-w-md text-center border border-red-600">
+            <h2 class="text-2xl font-bold text-red-500 mb-4 uppercase tracking-wide">Awaiting Admin Approval</h2>
+            <p class="text-white mb-6 text-sm leading-relaxed opacity-90">Your account has been registered. Please ask the manager to approve your access terminal.</p>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-6"></div>
+            <button onclick="logoutUser()" class="bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white border border-red-600/40 px-5 py-2.5 rounded-xl font-medium transition w-full uppercase text-xs tracking-wider">
                 Log Out / Switch Account
             </button>
         </div>
     </div>
 
-
     <div id="pos-main-interface" class="hidden p-4 max-w-7xl mx-auto">
         
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-800 pb-4 mb-6">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-800 pb-4 mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-amber-500">The Chinese Table</h1>
+                <h1 class="text-2xl font-black text-red-600 uppercase tracking-wide italic">The Chinese Table</h1>
                 <div class="flex items-center gap-2 mt-1">
                     <span class="inline-block w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
-                   <p class="text-xs text-gray-400" id="user-display-status">Connected</p>
+                   <p class="text-xs text-white opacity-80" id="user-display-status">Connected</p>
                 </div>
             </div>
-            <button onclick="logoutUser()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-lg border border-gray-700 transition">
+            <button onclick="logoutUser()" class="text-xs bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-2 rounded-lg border border-zinc-800 transition uppercase font-bold tracking-wider">
                 Sign Out
             </button>
         </header>
-        <div id="staff-performance-panel" class="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-6 hidden">
+
+        <div id="staff-performance-panel" class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 mb-6 hidden">
             <div class="flex justify-between items-center mb-3">
-                <h2 class="text-md font-bold text-gray-200">👥 Live Staff Performance</h2>
-                <button onclick="renderSavedBillsDashboard(window.lastKnownBills)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-600 transition shadow-sm">
+                <h2 class="text-md font-bold text-white uppercase tracking-wide">👥 Live Staff Performance</h2>
+                <button onclick="renderSavedBillsDashboard(window.lastKnownBills)" class="bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-700 transition shadow-sm">
                     Show All Tables
                 </button>
             </div>
-            <div id="staff-stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                </div>
+            <div id="staff-stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3"></div>
         </div>
 
-        <div id="admin-panel" class="hidden bg-gray-800/50 border border-blue-500/30 p-4 rounded-2xl mb-6 shadow-xl">
-            <h3 class="text-md font-bold text-blue-400 mb-3 flex items-center gap-2">
+        <div id="admin-panel" class="hidden bg-zinc-900/50 border border-red-600/30 p-4 rounded-2xl mb-6 shadow-xl">
+            <h3 class="text-md font-bold text-red-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
                 <span>🛡️ Staff Access Control Dashboard</span>
             </h3>
             <div id="pending-staff-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                <p class="text-gray-500 italic text-sm">No pending approval requests.</p>
+                <p class="text-white/40 italic text-sm col-span-full">No pending approval requests.</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             <div class="lg:col-span-7 space-y-6">
-                <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-                    <h2 class="text-lg font-bold mb-4 text-gray-200">Menu Items</h2>
-                    <div id="menu-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        </div>
+                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                    <h2 class="text-lg font-bold mb-4 text-white uppercase tracking-wide border-b border-zinc-800 pb-2">Menu Items</h2>
+                    <div id="menu-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
                 </div>
             </div>
 
             <div class="lg:col-span-5 space-y-6">
-                <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex flex-col h-[450px]">
-                   <h2 class="text-lg font-bold mb-3 text-white flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800 pb-2">
+                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex flex-col h-[450px]">
+                    <h2 class="text-lg font-bold mb-3 text-white flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800 pb-2">
                         <span>Current Order</span>
                         <div class="flex items-center gap-2">
                             <button id="delivery-toggle-btn" onclick="toggleDeliveryMode()" class="bg-zinc-900 text-white/80 border border-zinc-700 hover:border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition">
@@ -122,51 +119,54 @@
                     </div>
                     
                     <div id="cart-items" class="flex-1 overflow-y-auto space-y-2 pr-1 text-sm">
-                        <p class="text-gray-500 italic text-center pt-12">Cart is empty. Select items to begin.</p>
+                        <p class="text-white/40 italic text-center pt-12">Cart is empty. Select items to begin.</p>
                     </div>
 
-                    <div class="border-t border-gray-700 pt-3 mt-3 space-y-2">
+                    <div class="border-t border-zinc-800 pt-3 mt-3 space-y-2">
                         <div class="flex justify-between font-bold text-lg text-white">
                             <span>Total Amount:</span>
                             <span>₹<span id="cart-total">0</span></span>
                         </div>
-                        <button onclick="handleSaveBill()" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-3 rounded-xl transition duration-150">
+                        <button onclick="handleSaveBill()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition duration-150 uppercase tracking-wider text-sm">
                             Hold & Save Bill
                         </button>
                     </div>
                 </div>
-<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-            
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                <h2 class="text-lg font-bold text-gray-200">Live Active Tables</h2>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button onclick="sendEmailReport()" class="flex-1 sm:flex-none text-center bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-blue-600/30 transition active:scale-95">
-                        Email Report
-                    </button>
-                    <button onclick="settleAllBills()" class="flex-1 sm:flex-none text-center bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-red-600/30 transition active:scale-95">
-                        Settle All
-                    </button>
-                </div>
-            </div>
 
-            <div class="flex justify-between items-center bg-gray-900/80 p-3 rounded-xl mb-3 border border-gray-700 shadow-inner">
-                <div>
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Active Bills</p>
-                    <p class="text-2xl font-black text-white leading-none mt-1" id="dashboard-bill-count">0</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Live Revenue</p>
-                    <p class="text-2xl font-black text-emerald-400 leading-none mt-1">₹<span id="dashboard-total-revenue">0</span></p>
-                </div>
-            </div>
+                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-zinc-800 pb-2">
+                        <h2 class="text-lg font-bold text-white uppercase tracking-wide">Live Active Tables</h2>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="sendEmailReport()" class="flex-1 sm:flex-none text-center bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-blue-600/30 transition active:scale-95">
+                                Email Report
+                            </button>
+                            <button onclick="settleAllBills()" class="flex-1 sm:flex-none text-center bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-red-600/30 transition active:scale-95">
+                                Settle All
+                            </button>
+                        </div>
+                    </div>
 
-            <div id="global-bills-container" class="space-y-2 max-h-[300px] overflow-y-auto">
-                <p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>
-            </div>
+                    <div class="flex justify-between items-center bg-black p-3 rounded-xl mb-3 border border-zinc-800 shadow-inner">
+                        <div>
+                            <p class="text-[10px] text-white/60 uppercase tracking-widest font-bold">Active Bills</p>
+                            <p class="text-2xl font-black text-white leading-none mt-1" id="dashboard-bill-count">0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-white/60 uppercase tracking-widest font-bold">Live Revenue</p>
+                            <p class="text-2xl font-black text-emerald-400 leading-none mt-1">₹<span id="dashboard-total-revenue">0</span></p>
+                        </div>
+                    </div>
 
+                    <div id="global-bills-container" class="space-y-2 max-h-[300px] overflow-y-auto">
+                        <p class="text-white/40 italic text-sm text-center py-4">No active saved bills across terminals.</p>
+                    </div>
+                </div>
+
+            </div>
         </div>
+    </div>
+
     <script>
-        // !!! IMPORTANT: PASTE YOUR EXACT FIREBASE CONFIGURATION COPIED FROM YOUR FIREBASE CONSOLE HERE !!!
         const firebaseConfig = {
             apiKey: "AIzaSyA_S_y2VTWMe1f1UFumZEEW_ktbZtVzo1Y",
             authDomain: "gen-lang-client-0044267372.firebaseapp.com",
@@ -177,171 +177,158 @@
             appId: "1:901953259613:web:6fefb1ac72519618d065b4"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-
-        // Define Master Administrator Account 
         const ADMIN_EMAIL = 'vinitbnarule@gmail.com';
-
-        // Local State
         let cart = [];
+
         const menuData = [
-             // VEG SOUP
-    {name:"Manchow Soup",price:150,cat:"veg-soup"},
-    {name:"Clear Soup",price:160,cat:"veg-soup"},
-    {name:"Sweet Corn Soup",price:180,cat:"veg-soup"},
-    {name:"Coriander Soup",price:200,cat:"veg-soup"},
-    {name:"Hot & Sour Soup",price:220,cat:"veg-soup"},
-    {name:"Black Pepper Soup",price:220,cat:"veg-soup"},
-    // NON-VEG SOUP
-    {name:"Chicken Manchow Soup",price:160,cat:"nonveg-soup"},
-    {name:"Chicken Clear Soup",price:170,cat:"nonveg-soup"},
-    {name:"Chicken Sweet Corn Soup",price:190,cat:"nonveg-soup"},
-    {name:"Chicken Coriander Soup",price:210,cat:"nonveg-soup"},
-    {name:"Chicken Hot & Sour Soup",price:230,cat:"nonveg-soup"},
-    {name:"Chicken Black Pepper Soup",price:230,cat:"nonveg-soup"},
-    // VEG STARTERS
-    {name:"Veg Crispy",price:210,cat:"veg-starter"},
-    {name:"Potato Honey Glazed",price:250,cat:"veg-starter"},
-    {name:"Veg Manchurian",price:210,cat:"veg-starter"},
-    {name:"Veg Green Curry",price:330,cat:"veg-starter"},
-    {name:"Veg Red Curry",price:330,cat:"veg-starter"},
-    {name:"Paneer Crispy",price:260,cat:"veg-starter"},
-    {name:"Paneer Chilly",price:230,cat:"veg-starter"},
-    {name:"Veg Khaosuey",price:369,cat:"veg-starter"},
-    {name:"Paneer Hara Bhara",price:230,cat:"veg-starter"},
-    {name:"Soyabean Chilly",price:230,cat:"veg-starter"},
-    {name:"Mushroom Chilly Dry",price:260,cat:"veg-starter"},
-    {name:"Paneer Kung Pao",price:260,cat:"veg-starter"},
-    {name:"Paneer Black Bean",price:280,cat:"veg-starter"},
-    // NON-VEG STARTERS
-    {name:"Chicken Lollypop",price:150,cat:"nonveg-starter"},
-    {name:"Chicken Lollypop Gravy",price:180,cat:"nonveg-starter"},
-    {name:"Chicken Manchurian",price:210,cat:"nonveg-starter"},
-    {name:"Chicken 65",price:230,cat:"nonveg-starter"},
-    {name:"Chicken Chilly",price:240,cat:"nonveg-starter"},
-    {name:"Chicken Heaven",price:300,cat:"nonveg-starter"},
-    {name:"Chicken Manchurian Gravy",price:260,cat:"nonveg-starter"},
-    {name:"Chicken Kung Pao",price:260,cat:"nonveg-starter"},
-    {name:"Chicken Crispy",price:280,cat:"nonveg-starter"},
-    {name:"Chicken Hara Bhara",price:280,cat:"nonveg-starter"},
-    {name:"Chicken Red Curry",price:350,cat:"nonveg-starter"},
-    {name:"Chicken Green Curry",price:350,cat:"nonveg-starter"},
-    {name:"Chicken Khaosuey",price:399,cat:"nonveg-starter"},
-    {name:"Chicken Black Pepper",price:280,cat:"nonveg-starter"},
-    {name:"Chicken Black Bean",price:280,cat:"nonveg-starter"},
-    {name:"Chicken Barbeque",price:330,cat:"nonveg-starter"},
-    {name:"Chicken Butter Garlic",price:330,cat:"nonveg-starter"},
-    {name:"Chicken Honey Glazed",price:330,cat:"nonveg-starter"},
-    // VEG RICE
-    {name:"Fried Rice (H)",price:110,cat:"veg-rice"},
-    {name:"Fried Rice (F)",price:170,cat:"veg-rice"},
-    {name:"Schezwan Rice (H)",price:120,cat:"veg-rice"},
-    {name:"Schezwan Rice (F)",price:200,cat:"veg-rice"},
-    {name:"Paneer Rice (H)",price:150,cat:"veg-rice"},
-    {name:"Paneer Rice (F)",price:220,cat:"veg-rice"},
-    {name:"Triple Rice (H)",price:150,cat:"veg-rice"},
-    {name:"Triple Rice (F)",price:250,cat:"veg-rice"},
-    {name:"Manchurian Rice",price:210,cat:"veg-rice"},
-    {name:"Korean Rice",price:230,cat:"veg-rice"},
-    {name:"Green Garlic Rice",price:230,cat:"veg-rice"},
-    {name:"Chilly Garlic Rice",price:230,cat:"veg-rice"},
-    {name:"Bunts Garlic Rice",price:230,cat:"veg-rice"},
-    {name:"Pot Rice",price:250,cat:"veg-rice"},
-    {name:"Special Rice",price:300,cat:"veg-rice"},
-    {name:"Chopper Rice",price:310,cat:"veg-rice"},
-    {name:"Box Rice",price:320,cat:"veg-rice"},
-    {name:"Veg Green Thai Curry",price:350,cat:"veg-rice"},
-    {name:"Veg Red Thai Curry",price:350,cat:"veg-rice"},
-    // NON-VEG RICE
-    {name:"Egg Rice (H)",price:100,cat:"nonveg-rice"},
-    {name:"Egg Rice (F)",price:170,cat:"nonveg-rice"},
-    {name:"Chicken Fried Rice (H)",price:120,cat:"nonveg-rice"},
-    {name:"Chicken Fried Rice (F)",price:180,cat:"nonveg-rice"},
-    {name:"Chicken Schezwan Rice (H)",price:130,cat:"nonveg-rice"},
-    {name:"Chicken Schezwan Rice (F)",price:220,cat:"nonveg-rice"},
-    {name:"Chicken Triple Rice (H)",price:160,cat:"nonveg-rice"},
-    {name:"Chicken Triple Rice (F)",price:260,cat:"nonveg-rice"},
-    {name:"Chicken Green Garlic Rice",price:260,cat:"nonveg-rice"},
-    {name:"Chicken Bunts Garlic Rice",price:240,cat:"nonveg-rice"},
-    {name:"Chicken Chilly Garlic Rice",price:280,cat:"nonveg-rice"},
-    {name:"Chicken Pot Rice",price:280,cat:"nonveg-rice"},
-    {name:"Chicken Korean Rice",price:280,cat:"nonveg-rice"},
-    {name:"Chicken Special Rice",price:310,cat:"nonveg-rice"},
-    {name:"Chicken Chopper Rice",price:320,cat:"nonveg-rice"},
-    {name:"Chicken Box Rice",price:330,cat:"nonveg-rice"},
-    {name:"Chicken Green Thai Curry",price:375,cat:"nonveg-rice"},
-    {name:"Chicken Red Thai Curry",price:375,cat:"nonveg-rice"},
-    // VEG NOODLES
-    {name:"Hakka Noodles (H)",price:110,cat:"veg-noodle"},
-    {name:"Hakka Noodles (F)",price:180,cat:"veg-noodle"},
-    {name:"Schezwan Noodles (H)",price:120,cat:"veg-noodle"},
-    {name:"Schezwan Noodles (F)",price:200,cat:"veg-noodle"},
-    {name:"Triple Noodles (H)",price:130,cat:"veg-noodle"},
-    {name:"Triple Noodles (F)",price:240,cat:"veg-noodle"},
-    {name:"Pan Fry Noodles",price:250,cat:"veg-noodle"},
-    {name:"Singaporean Noodles",price:270,cat:"veg-noodle"},
-    {name:"Chilly Garlic Noodles",price:270,cat:"veg-noodle"},
-    {name:"Chinese Chopsuey",price:270,cat:"veg-noodle"},
-    // NON-VEG NOODLES
-    {name:"Egg Noodles (H)",price:100,cat:"nonveg-noodle"},
-    {name:"Egg Noodles (F)",price:180,cat:"nonveg-noodle"},
-    {name:"Chicken Hakka Noodles (H)",price:120,cat:"nonveg-noodle"},
-    {name:"Chicken Hakka Noodles (F)",price:200,cat:"nonveg-noodle"},
-    {name:"Chicken Schezwan Noodles (H)",price:130,cat:"nonveg-noodle"},
-    {name:"Chicken Schezwan Noodles (F)",price:220,cat:"nonveg-noodle"},
-    {name:"Chicken Triple Noodles (H)",price:150,cat:"nonveg-noodle"},
-    {name:"Chicken Triple Noodles (F)",price:250,cat:"nonveg-noodle"},
-    {name:"Chicken Pan Fry Noodles",price:280,cat:"nonveg-noodle"},
-    {name:"Chicken Singaporean Noodles",price:280,cat:"nonveg-noodle"},
-    {name:"Chicken Chilly Garlic Noodles",price:280,cat:"nonveg-noodle"},
-    {name:"Chicken Chinese Chopsuey",price:280,cat:"nonveg-noodle"},
-    // CHEF SPECIAL
-    {name:"Chicken Lemon Pepper Chest",price:300,cat:"chef-special"},
-    {name:"Chicken Barbeque Sauce Dry",price:300,cat:"chef-special"},
-    {name:"Jackpot Rice",price:550,cat:"chef-special"},
-    {name:"Jackpot Noodles",price:550,cat:"chef-special"},
-    // COMBOS
-    {name:"Veg Lunch Combo",price:200,cat:"combo"},
-    {name:"Non-Veg Lunch Combo",price:220,cat:"combo"},
-    // DRINKS
-    {name:"Water Bottle (Big)",price:20,cat:"drinks"},
-    {name:"Water Bottle (Small)",price:10,cat:"drinks"},
-    {name:"Glass Cold Drink",price:15,cat:"drinks"},
-    {name:"Small Soft Drink",price:20,cat:"drinks"},
-    {name:"Medium Soft Drink",price:40,cat:"drinks"},
-    {name:"Maaza Glass",price:15,cat:"drinks"}
+            // VEG SOUP
+            {name:"Manchow Soup",price:150,cat:"veg-soup"},
+            {name:"Clear Soup",price:160,cat:"veg-soup"},
+            {name:"Sweet Corn Soup",price:180,cat:"veg-soup"},
+            {name:"Coriander Soup",price:200,cat:"veg-soup"},
+            {name:"Hot & Sour Soup",price:220,cat:"veg-soup"},
+            {name:"Black Pepper Soup",price:220,cat:"veg-soup"},
+            // NON-VEG SOUP
+            {name:"Chicken Manchow Soup",price:160,cat:"nonveg-soup"},
+            {name:"Chicken Clear Soup",price:170,cat:"nonveg-soup"},
+            {name:"Chicken Sweet Corn Soup",price:190,cat:"nonveg-soup"},
+            {name:"Chicken Coriander Soup",price:210,cat:"nonveg-soup"},
+            {name:"Chicken Hot & Sour Soup",price:230,cat:"nonveg-soup"},
+            {name:"Chicken Black Pepper Soup",price:230,cat:"nonveg-soup"},
+            // VEG STARTERS
+            {name:"Veg Crispy",price:210,cat:"veg-starter"},
+            {name:"Potato Honey Glazed",price:250,cat:"veg-starter"},
+            {name:"Veg Manchurian",price:210,cat:"veg-starter"},
+            {name:"Veg Green Curry",price:330,cat:"veg-starter"},
+            {name:"Veg Red Curry",price:330,cat:"veg-starter"},
+            {name:"Paneer Crispy",price:260,cat:"veg-starter"},
+            {name:"Paneer Chilly",price:230,cat:"veg-starter"},
+            {name:"Veg Khaosuey",price:369,cat:"veg-starter"},
+            {name:"Paneer Hara Bhara",price:230,cat:"veg-starter"},
+            {name:"Soyabean Chilly",price:230,cat:"veg-starter"},
+            {name:"Mushroom Chilly Dry",price:260,cat:"veg-starter"},
+            {name:"Paneer Kung Pao",price:260,cat:"veg-starter"},
+            {name:"Paneer Black Bean",price:280,cat:"veg-starter"},
+            // NON-VEG STARTERS
+            {name:"Chicken Lollypop",price:150,cat:"nonveg-starter"},
+            {name:"Chicken Lollypop Gravy",price:180,cat:"nonveg-starter"},
+            {name:"Chicken Manchurian",price:210,cat:"nonveg-starter"},
+            {name:"Chicken 65",price:230,cat:"nonveg-starter"},
+            {name:"Chicken Chilly",price:240,cat:"nonveg-starter"},
+            {name:"Chicken Heaven",price:300,cat:"nonveg-starter"},
+            {name:"Chicken Manchurian Gravy",price:260,cat:"nonveg-starter"},
+            {name:"Chicken Kung Pao",price:260,cat:"nonveg-starter"},
+            {name:"Chicken Crispy",price:280,cat:"nonveg-starter"},
+            {name:"Chicken Hara Bhara",price:280,cat:"nonveg-starter"},
+            {name:"Chicken Red Curry",price:350,cat:"nonveg-starter"},
+            {name:"Chicken Green Curry",price:350,cat:"nonveg-starter"},
+            {name:"Chicken Khaosuey",price:399,cat:"nonveg-starter"},
+            {name:"Chicken Black Pepper",price:280,cat:"nonveg-starter"},
+            {name:"Chicken Black Bean",price:280,cat:"nonveg-starter"},
+            {name:"Chicken Barbeque",price:330,cat:"nonveg-starter"},
+            {name:"Chicken Butter Garlic",price:330,cat:"nonveg-starter"},
+            {name:"Chicken Honey Glazed",price:330,cat:"nonveg-starter"},
+            // VEG RICE
+            {name:"Fried Rice (H)",price:110,cat:"veg-rice"},
+            {name:"Fried Rice (F)",price:170,cat:"veg-rice"},
+            {name:"Schezwan Rice (H)",price:120,cat:"veg-rice"},
+            {name:"Schezwan Rice (F)",price:200,cat:"veg-rice"},
+            {name:"Paneer Rice (H)",price:150,cat:"veg-rice"},
+            {name:"Paneer Rice (F)",price:220,cat:"veg-rice"},
+            {name:"Triple Rice (H)",price:150,cat:"veg-rice"},
+            {name:"Triple Rice (F)",price:250,cat:"veg-rice"},
+            {name:"Manchurian Rice",price:210,cat:"veg-rice"},
+            {name:"Korean Rice",price:230,cat:"veg-rice"},
+            {name:"Green Garlic Rice",price:230,cat:"veg-rice"},
+            {name:"Chilly Garlic Rice",price:230,cat:"veg-rice"},
+            {name:"Bunts Garlic Rice",price:230,cat:"veg-rice"},
+            {name:"Pot Rice",price:250,cat:"veg-rice"},
+            {name:"Special Rice",price:300,cat:"veg-rice"},
+            {name:"Chopper Rice",price:310,cat:"veg-rice"},
+            {name:"Box Rice",price:320,cat:"veg-rice"},
+            {name:"Veg Green Thai Curry",price:350,cat:"veg-rice"},
+            {name:"Veg Red Thai Curry",price:350,cat:"veg-rice"},
+            // NON-VEG RICE
+            {name:"Egg Rice (H)",price:100,cat:"nonveg-rice"},
+            {name:"Egg Rice (F)",price:170,cat:"nonveg-rice"},
+            {name:"Chicken Fried Rice (H)",price:120,cat:"nonveg-rice"},
+            {name:"Chicken Fried Rice (F)",price:180,cat:"nonveg-rice"},
+            {name:"Chicken Schezwan Rice (H)",price:130,cat:"nonveg-rice"},
+            {name:"Chicken Schezwan Rice (F)",price:220,cat:"nonveg-rice"},
+            {name:"Chicken Triple Rice (H)",price:160,cat:"nonveg-rice"},
+            {name:"Chicken Triple Rice (F)",price:260,cat:"nonveg-rice"},
+            {name:"Chicken Green Garlic Rice",price:260,cat:"nonveg-rice"},
+            {name:"Chicken Bunts Garlic Rice",price:240,cat:"nonveg-rice"},
+            {name:"Chicken Chilly Garlic Rice",price:280,cat:"nonveg-rice"},
+            {name:"Chicken Pot Rice",price:280,cat:"nonveg-rice"},
+            {name:"Chicken Korean Rice",price:280,cat:"nonveg-rice"},
+            {name:"Chicken Special Rice",price:310,cat:"nonveg-rice"},
+            {name:"Chicken Chopper Rice",price:320,cat:"nonveg-rice"},
+            {name:"Chicken Box Rice",price:330,cat:"nonveg-rice"},
+            {name:"Chicken Green Thai Curry",price:375,cat:"nonveg-rice"},
+            {name:"Chicken Red Thai Curry",price:375,cat:"nonveg-rice"},
+            // VEG NOODLES
+            {name:"Hakka Noodles (H)",price:110,cat:"veg-noodle"},
+            {name:"Hakka Noodles (F)",price:180,cat:"veg-noodle"},
+            {name:"Schezwan Noodles (H)",price:120,cat:"veg-noodle"},
+            {name:"Schezwan Noodles (F)",price:200,cat:"veg-noodle"},
+            {name:"Triple Noodles (H)",price:130,cat:"veg-noodle"},
+            {name:"Triple Noodles (F)",price:240,cat:"veg-noodle"},
+            {name:"Pan Fry Noodles",price:250,cat:"veg-noodle"},
+            {name:"Singaporean Noodles",price:270,cat:"veg-noodle"},
+            {name:"Chilly Garlic Noodles",price:270,cat:"veg-noodle"},
+            {name:"Chinese Chopsuey",price:270,cat:"veg-noodle"},
+            // NON-VEG NOODLES
+            {name:"Egg Noodles (H)",price:100,cat:"nonveg-noodle"},
+            {name:"Egg Noodles (F)",price:180,cat:"nonveg-noodle"},
+            {name:"Chicken Hakka Noodles (H)",price:120,cat:"nonveg-noodle"},
+            {name:"Chicken Hakka Noodles (F)",price:200,cat:"nonveg-noodle"},
+            {name:"Chicken Schezwan Noodles (H)",price:130,cat:"nonveg-noodle"},
+            {name:"Chicken Schezwan Noodles (F)",price:220,cat:"nonveg-noodle"},
+            {name:"Chicken Triple Noodles (H)",price:150,cat:"nonveg-noodle"},
+            {name:"Chicken Triple Noodles (F)",price:250,cat:"nonveg-noodle"},
+            {name:"Chicken Pan Fry Noodles",price:280,cat:"nonveg-noodle"},
+            {name:"Chicken Singaporean Noodles",price:280,cat:"nonveg-noodle"},
+            {name:"Chicken Chilly Garlic Noodles",price:280,cat:"nonveg-noodle"},
+            {name:"Chicken Chinese Chopsuey",price:280,cat:"nonveg-noodle"},
+            // CHEF SPECIAL
+            {name:"Chicken Lemon Pepper Chest",price:300,cat:"chef-special"},
+            {name:"Chicken Barbeque Sauce Dry",price:300,cat:"chef-special"},
+            {name:"Jackpot Rice",price:550,cat:"chef-special"},
+            {name:"Jackpot Noodles",price:550,cat:"chef-special"},
+            // COMBOS
+            {name:"Veg Lunch Combo",price:200,cat:"combo"},
+            {name:"Non-Veg Lunch Combo",price:220,cat:"combo"},
+            // DRINKS
+            {name:"Water Bottle (Big)",price:20,cat:"drinks"},
+            {name:"Water Bottle (Small)",price:10,cat:"drinks"},
+            {name:"Glass Cold Drink",price:15,cat:"drinks"},
+            {name:"Small Soft Drink",price:20,cat:"drinks"},
+            {name:"Medium Soft Drink",price:40,cat:"drinks"},
+            {name:"Maaza Glass",price:15,cat:"drinks"}
         ];
 
-        // ==========================================
-        // AUTHENTICATION STATE ROUTER
-        // ==========================================
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('user-display-status').innerText = `Terminal Active: ${user.displayName || user.email}`;
                 
                 if (user.email === ADMIN_EMAIL) {
-                    // System Routing: MASTER ADMIN VIEW
                     document.getElementById('admin-panel').classList.remove('hidden');
                     document.getElementById('waiting-room').classList.add('hidden');
                     document.getElementById('pos-main-interface').classList.remove('hidden');
-                    
                     listenForStaffRequests();
                     initializeUnifiedPOS();
                 } else {
-                    // System Routing: EVALUATE STAFF PERMISSION NODE
                     firebase.database().ref(`users/${user.uid}`).on('value', (snapshot) => {
                         const userData = snapshot.val();
-                        
                         if (userData && userData.approved === true) {
-                            // Staff is verified and clear
                             document.getElementById('admin-panel').classList.add('hidden');
                             document.getElementById('waiting-room').classList.add('hidden');
                             document.getElementById('pos-main-interface').classList.remove('hidden');
                             initializeUnifiedPOS();
                         } else {
-                            // New Registration Engine: Auto-generate tracking node if completely fresh
                             if (!userData) {
                                 firebase.database().ref(`users/${user.uid}`).set({
                                     name: user.displayName || 'Staff Terminal',
@@ -350,7 +337,6 @@
                                     requestedAt: firebase.database.ServerValue.TIMESTAMP
                                 });
                             }
-                            // Route directly into Secure Waiting Room
                             document.getElementById('waiting-room').classList.remove('hidden');
                             document.getElementById('pos-main-interface').classList.add('hidden');
                             document.getElementById('admin-panel').classList.add('hidden');
@@ -358,7 +344,6 @@
                     });
                 }
             } else {
-                // System Reset on Logout
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('pos-main-interface').classList.add('hidden');
                 document.getElementById('waiting-room').classList.add('hidden');
@@ -368,10 +353,9 @@
             }
         });
 
-       function loginWithGoogle() {
+        function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider).then((result) => {
-                // If a revoked user logs back in, reset them so they pop up on the manager's screen again
                 firebase.database().ref(`users/${result.user.uid}`).once('value', (snapshot) => {
                     const userData = snapshot.val();
                     if (userData && userData.approved === "revoked") {
@@ -388,9 +372,6 @@
             firebase.auth().signOut();
         }
 
-        // ==========================================
-        // ADMIN DASHBOARD CORE OPERATIONS
-        // ==========================================
         function listenForStaffRequests() {
             firebase.database().ref('users').on('value', (snapshot) => {
                 const users = snapshot.val();
@@ -399,38 +380,29 @@
                 
                 let count = 0;
                 for (let uid in users) {
-                    // Do not show the Master Admin in this list
                     if (users[uid].email === ADMIN_EMAIL) continue;
-                    // Do not show staff who have been revoked (make them disappear)
                     if (users[uid].approved === "revoked") continue;
 
                     count++;
                     const isApproved = users[uid].approved;
-                    
                     const card = document.createElement('div');
                     card.className = "flex justify-between items-center bg-gray-700/60 p-3 rounded-xl border border-gray-600";
                     
                     if (!isApproved) {
-                        // Showing Pending Staff
                         card.innerHTML = `
                             <div class="truncate mr-2">
                                 <p class="font-bold text-white text-sm truncate">${users[uid].name} <span class="text-xs text-amber-500">(Pending)</span></p>
                                 <p class="text-xs text-gray-400 truncate">${users[uid].email}</p>
                             </div>
-                            <button onclick="approveStaff('${uid}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">
-                                Approve
-                            </button>
+                            <button onclick="approveStaff('${uid}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">Approve</button>
                         `;
                     } else {
-                        // Showing Active/Approved Staff
                         card.innerHTML = `
                             <div class="truncate mr-2">
                                 <p class="font-bold text-white text-sm truncate">${users[uid].name} <span class="text-xs text-emerald-400">(Active)</span></p>
                                 <p class="text-xs text-gray-400 truncate">${users[uid].email}</p>
                             </div>
-                            <button onclick="revokeStaff('${uid}', '${users[uid].name}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/40 text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">
-                                Revoke
-                            </button>
+                            <button onclick="revokeStaff('${uid}', '${users[uid].name}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/40 text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">Revoke</button>
                         `;
                     }
                     container.appendChild(card);
@@ -445,28 +417,21 @@
             firebase.database().ref(`users/${uid}`).update({ approved: true });
         }
 
-        // ==========================================
-        // UNIFIED CLOUD SYNCHRONIZATION ENGINE
-        // ==========================================
         function initializeUnifiedPOS() {
             renderMenu();
-            
-            // Central cloud data stream connection mapping
             firebase.database().ref('bills').on('value', (snapshot) => {
                 const bills = snapshot.val();
                 renderSavedBillsDashboard(bills);
             });
         }
 
-       function renderMenu() {
+        function renderMenu() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
             menuData.forEach((item, index) => {
-                // This magic line automatically gives every item a unique ID!
                 item.id = index + 1; 
-                
                 const btn = document.createElement('button');
-                btn.className = "bg-gray-700/40 hover:bg-gray-700 text-left p-3 rounded-xl border border-gray-700 transition active:scale-95 flex flex-col justify-between h-24";
+                btn.className = "bg-gray-700/40 hover:bg-gray-700 text-left p-3 rounded-xl border border-gray-700 transition active:scale(0.95) flex flex-col justify-between h-24";
                 btn.onclick = () => addToCart(item);
                 btn.innerHTML = `
                     <span class="font-medium text-sm text-gray-200 leading-snug">${item.name}</span>
@@ -478,21 +443,36 @@
 
         function addToCart(item) {
             const existing = cart.find(i => i.id === item.id);
-            if (existing) {
-                existing.qty++;
-            } else {
-                cart.push({ ...item, qty: 1 });
-            }
+            if (existing) { existing.qty++; } else { cart.push({ ...item, qty: 1 }); }
             updateCartUI();
         }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            window.toggleDeliveryMode = function() {
+                isDeliveryModeActive = !isDeliveryModeActive;
+                const btn = document.getElementById('delivery-toggle-btn');
+                const addressBox = document.getElementById('address-bar-container');
+                const tableInput = document.getElementById('table-number');
+
+                if (isDeliveryModeActive) {
+                    btn.className = "bg-red-600 text-white border border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
+                    addressBox.classList.remove('hidden');
+                    tableInput.value = "DEL";
+                    document.getElementById('delivery-address').focus();
+                } else {
+                    btn.className = "bg-zinc-900 text-white/80 border border-zinc-700 hover:border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
+                    addressBox.classList.add('hidden');
+                    tableInput.value = "";
+                    document.getElementById('delivery-address').value = "";
+                }
+            };
+        });
 
         function updateCartQty(id, delta) {
             const item = cart.find(i => i.id === id);
             if (item) {
                 item.qty += delta;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
-                }
+                if (item.qty <= 0) { cart = cart.filter(i => i.id !== id); }
             }
             updateCartUI();
         }
@@ -504,15 +484,13 @@
                 document.getElementById('cart-total').innerText = '0';
                 return;
             }
-            
             container.innerHTML = '';
             let total = 0;
-            
             cart.forEach(item => {
                 total += item.price * item.qty;
                 const row = document.createElement('div');
                 row.className = "flex justify-between items-center bg-gray-900/50 p-2.5 rounded-xl border border-gray-800";
-              row.innerHTML = `
+                row.innerHTML = `
                     <div class="flex-1 min-w-0 pr-2">
                         <p class="font-medium text-gray-200 truncate">${item.name}</p>
                         ${item.note ? `<p class="text-[10px] text-blue-400 italic">Note: ${item.note}</p>` : ''}
@@ -532,16 +510,10 @@
             document.getElementById('cart-total').innerText = total;
         }
 
-       function handleSaveBill() {
+        function handleSaveBill() {
             const tableNum = document.getElementById('table-number').value.trim();
-            if (!tableNum) {
-                alert("Please assign a Table Number before locking the order.");
-                return;
-            }
-            if (cart.length === 0) {
-                alert("Cannot save an empty order.");
-                return;
-            }
+            if (!tableNum) { alert("Please assign a Table Number before locking the order."); return; }
+            if (cart.length === 0) { alert("Cannot save an empty order."); return; }
 
             const user = firebase.auth().currentUser;
             const total = parseInt(document.getElementById('cart-total').innerText);
@@ -561,53 +533,35 @@
                 .then(() => {
                     cart = [];
                     document.getElementById('table-number').value = '';
-                    if (isDeliveryModeActive) toggleDeliveryMode(); // Auto-reset delivery mode fields
+                    if (isDeliveryModeActive) toggleDeliveryMode(); 
                     updateCartUI();
                 })
                 .catch(err => alert("Sync Failure: " + err.message));
         }
-    function renderSavedBillsDashboard(bills, filterOperator = null) {
-            window.lastKnownBills = bills;
 
+        function renderSavedBillsDashboard(bills, filterOperator = null) {
+            window.lastKnownBills = bills;
             const container = document.getElementById('global-bills-container');
             const countTracker = document.getElementById('dashboard-bill-count');
             const revenueTracker = document.getElementById('dashboard-total-revenue');
-            const statsPanel = document.getElementById('staff-performance-panel');
-            const statsContainer = document.getElementById('staff-stats-container');
-
+            
             if (!bills) {
-                container.innerHTML = `<p class="text-white/40 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
+                container.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
                 if (countTracker) countTracker.innerText = '0';
                 if (revenueTracker) revenueTracker.innerText = '0';
-                if (statsPanel) statsPanel.classList.add('hidden');
                 return;
             }
 
-            if (statsPanel) statsPanel.classList.remove('hidden');
             container.innerHTML = '';
-            
             let totalBillsCount = 0;
             let totalRevenue = 0;
-            let operatorStats = {};
 
             for (let id in bills) {
                 const bill = bills[id];
                 totalBillsCount++;
                 totalRevenue += bill.total;
 
-                const opName = bill.operator || "Unknown";
-                if (!operatorStats[opName]) {
-                    operatorStats[opName] = { count: 0, revenue: 0 };
-                }
-                operatorStats[opName].count++;
-                operatorStats[opName].revenue += bill.total;
-            }
-
-            let renderedCount = 0;
-            for (let id in bills) {
-                const bill = bills[id];
-                if (filterOperator && bill.operator !== filterOperator) continue; 
-                renderedCount++;
+                if (filterOperator && bill.operator !== filterOperator) continue;
 
                 const div = document.createElement('div');
                 div.className = "bg-black border border-zinc-800 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-sm hover:border-zinc-700 transition";
@@ -617,10 +571,9 @@
                             <span class="font-bold text-red-500 text-base">Table ${bill.table}</span>
                             <span class="text-[10px] bg-zinc-900 text-white/70 px-1.5 py-0.5 rounded border border-zinc-800 truncate">Op: ${bill.operator}</span>
                         </div>
-                        ${bill.isDelivery && bill.address ? `<p class="text-xs text-red-500 font-bold mt-1 bg-red-950/20 border border-red-900/40 p-1.5 rounded-lg whitespace-normal">📍 Delivery Address: ${bill.address}</p>` : ''}
+                        ${bill.isDelivery && bill.address ? `<p class="text-xs text-red-500 font-bold mt-1 bg-red-950/20 border border-red-900/40 p-1.5 rounded-lg whitespace-normal">📍 Address: ${bill.address}</p>` : ''}
                         <p class="text-xs text-white/60 mt-1 whitespace-normal sm:truncate">${bill.items.map(i => `${i.name} (${i.qty})`).join(', ')}</p>
                     </div>
-                    
                     <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t border-zinc-800/60 pt-2.5 sm:pt-0 sm:border-0 shrink-0">
                         <span class="font-bold text-white text-base">₹${bill.total}</span>
                         <div class="flex gap-1.5">
@@ -633,42 +586,13 @@
                 container.appendChild(div);
             }
 
-            if (filterOperator && renderedCount > 0) {
-                container.insertAdjacentHTML('afterbegin', `<div class="bg-red-950/40 border border-red-600/30 text-red-400 text-xs text-center p-2 rounded-lg mb-2">Showing active tables only for: <b>${filterOperator}</b></div>`);
-            } else if (filterOperator && renderedCount === 0) {
-                container.innerHTML = `<p class="text-white/40 italic text-sm text-center py-4">No active tables for ${filterOperator}.</p>`;
-            }
-
             if (countTracker) countTracker.innerText = totalBillsCount;
             if (revenueTracker) revenueTracker.innerText = totalRevenue;
-
-            if (statsContainer) {
-                statsContainer.innerHTML = '';
-                for (let op in operatorStats) {
-                    const stat = operatorStats[op];
-                    const isFiltered = (filterOperator === op); 
-                    
-                    statsContainer.innerHTML += `
-                        <div class="${isFiltered ? 'bg-red-950/40 border-red-600/50' : 'bg-black border-zinc-800'} border p-3 rounded-xl flex justify-between items-center transition">
-                            <div class="truncate pr-2">
-                                <p class="font-bold text-white text-sm truncate">${op}</p>
-                                <p class="text-xs text-emerald-400 font-bold mt-0.5">₹${stat.revenue} <span class="text-white/50 font-normal">(${stat.count} bills)</span></p>
-                            </div>
-                            <button onclick="renderSavedBillsDashboard(window.lastKnownBills, '${op}')" class="${isFiltered ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-zinc-900 hover:bg-zinc-800 text-white'} px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-700 transition shrink-0">
-                                ${isFiltered ? 'Viewing' : 'View'}
-                            </button>
-                        </div>
-                    `;
-                }
-            }
         }
+
         function loadBillBackToCart(id) {
             const pin = prompt("Enter Manager PIN to edit this bill:");
-            if (pin !== "7045") {
-                alert("Incorrect PIN. Access denied.");
-                return;
-            }
-
+            if (pin !== "7045") { alert("Incorrect PIN. Access denied."); return; }
             firebase.database().ref(`bills/${id}`).once('value', (snapshot) => {
                 const bill = snapshot.val();
                 if (bill) {
@@ -681,40 +605,26 @@
 
         function settleBillClearance(id) {
             const pin = prompt("Enter Manager PIN to settle this table:");
-            if (pin !== "7045") {
-                alert("Incorrect PIN. Access denied.");
-                return;
-            }
-
-            if (confirm("Confirm settlement and archive this order?")) {
-                firebase.database().ref(`bills/${id}`).remove();
-            }
+            if (pin !== "7045") { alert("Incorrect PIN. Access denied."); return; }
+            if (confirm("Confirm settlement and archive this order?")) { firebase.database().ref(`bills/${id}`).remove(); }
         }
 
         function settleAllBills() {
             const pin = prompt("CRITICAL ACTION: Enter Manager PIN to SETTLE ALL tables:");
-            if (pin !== "7045") {
-                alert("Incorrect PIN. Access denied.");
-                return;
-            }
-
-            if (confirm("WARNING: This will instantly clear ALL active tables and revenue. Are you sure?")) {
-                firebase.database().ref('bills').remove();
-            }
+            if (pin !== "7045") { alert("Incorrect PIN. Access denied."); return; }
+            if (confirm("WARNING: This will clear ALL active tables. Are you sure?")) { firebase.database().ref('bills').remove(); }
         }
-       function addDishNote(id) {
+
+        function addDishNote(id) {
             const item = cart.find(i => i.id === id);
             if (item) {
-                const note = prompt(`Add customization for ${item.name} (e.g., Extra Spicy, Less Oil):`, item.note || "");
-                if (note !== null) {
-                    item.note = note.trim();
-                    updateCartUI();
-                }
+                const note = prompt(`Add customization for ${item.name}:`, item.note || "");
+                if (note !== null) { item.note = note.trim(); updateCartUI(); }
             }
         }
-       async function printReceipt(billId) {
+
+        async function printReceipt(billId) {
             try {
-                // 1. Move Bluetooth connection to the TOP (directly under the user click gesture context)
                 if (!window.printerChar) {
                     const device = await navigator.bluetooth.requestDevice({ 
                         filters: [{ name: 'SR588' }, { namePrefix: 'SR' }], 
@@ -725,167 +635,60 @@
                     window.printerChar = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
                 }
 
-                // 2. Fetch the data from Firebase safely AFTER the printer link is secured
                 firebase.database().ref(`bills/${billId}`).once('value', async (snapshot) => {
                     const bill = snapshot.val();
-                    if (!bill) {
-                        alert("Bill data not found!");
-                        return;
-                    }
+                    if (!bill) { alert("Bill data not found!"); return; }
 
                     const enc = new TextEncoder();
-                    
-                    // Initialize printer hardware & align center
                     await window.printerChar.writeValue(new Uint8Array([0x1B, 0x40, 0x1B, 0x61, 0x01]));
                     await window.printerChar.writeValue(enc.encode("THE CHINESE TABLE\n"));
-                    await window.printerChar.writeValue(enc.encode("SHOP 4, GROUND FLOOR, LANE 1\n"));
-                    await window.printerChar.writeValue(enc.encode("NEAR APOORVA GYM, KOLDONGRI\n"));
-                    await window.printerChar.writeValue(enc.encode("ANDHERI EAST, MUMBAI 400069\n"));
-                    await window.printerChar.writeValue(enc.encode("Mob: 7045149471\n"));
-                    await window.printerChar.writeValue(enc.encode(`TABLE: ${bill.table} | STAFF: ${bill.operator}\n`));
-                    await window.printerChar.writeValue(enc.encode(`${bill.timestampStr || new Date().toLocaleString("en-IN")}\n`));
+                    await window.printerChar.writeValue(enc.encode("SHOP 4, KOLDONGRI, ANDHERI EAST\n"));
+                    await window.printerChar.writeValue(enc.encode(`TABLE: ${bill.table}\n`));
                     await window.printerChar.writeValue(enc.encode("--------------------------------\n"));
-                    
-                    // Align left for items list formatting
                     await window.printerChar.writeValue(new Uint8Array([0x1B, 0x61, 0x00]));
 
-                    // Loop and stream menu items to the buffer
                     for (let item of bill.items) {
-                        const itemLine = `${item.qty}x ${item.name}`;
-                        const lineText = itemLine.substring(0, 20).padEnd(20);
+                        const lineText = `${item.qty}x ${item.name}`.substring(0, 20).padEnd(20);
                         const linePrice = (item.price * item.qty).toString().padStart(11);
-                        
                         await window.printerChar.writeValue(enc.encode(`${lineText} ${linePrice}\n`));
-                        if (item.note) {
-                            await window.printerChar.writeValue(enc.encode(`  >> ${item.note.substring(0, 28)}\n`));
-                        }
                     }
-
-                    // Bottom Total Block
                     await window.printerChar.writeValue(enc.encode("--------------------------------\n"));
-                    const grandTotalStr = bill.total.toString().padStart(11);
-                    await window.printerChar.writeValue(enc.encode(`TOTAL:              RS. ${grandTotalStr}\n\n\n\n\n`));
+                    await window.printerChar.writeValue(enc.encode(`TOTAL:              RS. ${bill.total}\n\n\n\n\n`));
                 });
-
-            } catch (e) { 
-                alert("Printer Error: " + e.message); 
-                window.printerChar = null; 
-            }
+            } catch (e) { alert("Printer Error: " + e.message); window.printerChar = null; }
         }
+
         function sendEmailReport() {
-            // 1. Verify Manager Access (Change "1234" to your actual PIN!)
             const pin = prompt("Enter Manager PIN to generate email report:");
-            if (pin !== "7045") {
-                alert("Incorrect PIN. Access denied.");
-                return;
-            }
+            if (pin !== "7045") { alert("Incorrect PIN. Access denied."); return; }
+            
+            const targetEmail = prompt("Enter report destination email:", "vinitbnarule@gmail.com");
+            if (!targetEmail) return;
 
-            // 2. Ask for the destination email
-            const targetEmail = prompt("Enter the email address to send this report to:", "vinitbnarule@gmail.com");
-            if (!targetEmail) return; // Stop if they hit cancel
-
-            // 3. Fetch the data and build the email
             firebase.database().ref('bills').once('value', (snapshot) => {
                 const bills = snapshot.val();
-                if (!bills) {
-                    alert("No active bills to send. The table is clear!");
-                    return;
-                }
+                if (!bills) { alert("No active bills to send."); return; }
 
-                let emailBody = "THE CHINESE TABLE - LIVE REVENUE REPORT\n";
-                emailBody += `Generated: ${new Date().toLocaleString("en-IN")}\n\n`;
-                
+                let emailBody = "THE CHINESE TABLE - LIVE REVENUE REPORT\n\n";
                 let totalRevenue = 0;
-                let billCount = 0;
-
-                // Loop through every table and format the text
                 for (let id in bills) {
-                    const bill = bills[id];
-                    totalRevenue += bill.total;
-                    billCount++;
-
-                    emailBody += `--- Table ${bill.table} ---\n`;
-                    emailBody += `Staff: ${bill.operator}\n`;
-                    emailBody += `Time: ${bill.timestampStr || "N/A"}\n`;
-                    
-                    bill.items.forEach(item => {
-                        emailBody += `${item.qty}x ${item.name} - Rs.${item.price * item.qty}\n`;
-                        if (item.note) emailBody += `   Note: ${item.note}\n`;
-                    });
-                    
-                    emailBody += `Bill Total: Rs.${bill.total}\n\n`;
+                    const b = bills[id];
+                    totalRevenue += b.total;
+                    emailBody += `Table ${b.table} - Total: Rs.${b.total}\n`;
+                    if (b.isDelivery && b.address) emailBody += `📍 Address: ${b.address}\n`;
                 }
-
-                // Add the grand total at the bottom
-                emailBody += `====================\n`;
-                emailBody += `TOTAL ACTIVE BILLS: ${billCount}\n`;
-                emailBody += `GRAND TOTAL REVENUE: Rs.${totalRevenue}\n`;
-
-                // 4. Encode the text so the email app can read it safely
-                const subject = encodeURIComponent(`The Chinese Table - Sales Report (${billCount} Bills)`);
-                const body = encodeURIComponent(emailBody);
-
-                // 5. Trigger the device's native email application
-                window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+                emailBody += `\nGRAND TOTAL REVENUE: Rs.${totalRevenue}`;
+                window.location.href = `mailto:${targetEmail}?subject=Live Sales Report&body=${encodeURIComponent(emailBody)}`;
             });
         }
-       function revokeStaff(uid, staffName) {
-            // Check Manager PIN (Remember to change "1234" to your actual PIN!)
-            const pin = prompt(`CRITICAL ACTION: Enter Manager PIN to revoke POS access for ${staffName}:`);
-            if (pin !== "1234") {
-                alert("Incorrect PIN. Access denied.");
-                return;
-            }
 
-            if (confirm(`Are you sure you want to lock out ${staffName}? Their terminal will instantly shut down.`)) {
-                // Change status to "revoked" to make them disappear completely
-                firebase.database().ref(`users/${uid}`).update({ approved: "revoked" });
-            }
+        function revokeStaff(uid, staffName) {
+            const pin = prompt(`Enter Manager PIN to revoke access for ${staffName}:`);
+            if (pin !== "1234") { alert("Incorrect PIN. Access denied."); return; }
+            if (confirm(`Lock out ${staffName}?`)) { firebase.database().ref(`users/${uid}`).update({ approved: "revoked" }); }
         }
+
         let isDeliveryModeActive = false;
-
-        function toggleDeliveryMode() {
-            isDeliveryModeActive = !isDeliveryModeActive;
-            const btn = document.getElementById('delivery-toggle-btn');
-            const addressBox = document.getElementById('address-bar-container');
-            const tableInput = document.getElementById('table-number');
-
-            if (isDeliveryModeActive) {
-                // Turn button red, expose address block, alter default table field
-                btn.className = "bg-red-600 text-white border border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
-                addressBox.classList.remove('hidden');
-                tableInput.value = "DEL";
-                document.getElementById('delivery-address').focus();
-            } else {
-                // Reset layout parameters back to default standard dine-in tracking
-                btn.className = "bg-zinc-900 text-white/80 border border-zinc-700 hover:border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
-                addressBox.classList.add('hidden');
-                tableInput.value = "";
-                document.getElementById('delivery-address').value = "";
-            }
-        }
-        let isDeliveryModeActive = false;
-
-        function toggleDeliveryMode() {
-            isDeliveryModeActive = !isDeliveryModeActive;
-            const btn = document.getElementById('delivery-toggle-btn');
-            const addressBox = document.getElementById('address-bar-container');
-            const tableInput = document.getElementById('table-number');
-
-            if (isDeliveryModeActive) {
-                // Style button red, expose address block, alter default table field
-                btn.className = "bg-red-600 text-white border border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
-                addressBox.classList.remove('hidden');
-                tableInput.value = "DEL";
-                document.getElementById('delivery-address').focus();
-            } else {
-                // Reset layout parameters back to standard dine-in tracking
-                btn.className = "bg-zinc-900 text-white/80 border border-zinc-700 hover:border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
-                addressBox.classList.add('hidden');
-                tableInput.value = "";
-                document.getElementById('delivery-address').value = "";
-            }
-        }
     </script>
 </body>
 </html>
