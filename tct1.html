@@ -104,10 +104,10 @@
                     </div>
                 </div>
 
-                <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-                   <div class="flex justify-between items-center mb-3">
-   <div class="flex justify-between items-center mb-3">
-    <h2 class="text-lg font-bold text-gray-200">Live Active Tables</h2>
+                       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-gray-200">Live Active Tables</h2>
+              <div class="flex gap-2">
     <div class="flex gap-2">
         <button onclick="sendEmailReport()" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-600/30 transition">
             Email Report
@@ -537,7 +537,7 @@
                 .catch(err => alert("Sync Failure: " + err.message));
         }
 
-      function renderSavedBillsDashboard(bills, filterOperator = null) {
+     function renderSavedBillsDashboard(bills, filterOperator = null) {
             window.lastKnownBills = bills; // Save the database state for the filter button
 
             const container = document.getElementById('global-bills-container');
@@ -587,7 +587,6 @@
                 renderedCount++;
 
                 const div = document.createElement('div');
-                // Updated layout styles: Stacks vertically on mobile (flex-col), rows on desktop (sm:flex-row)
                 div.className = "bg-gray-900/40 border border-gray-800 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-sm hover:border-gray-700 transition";
                 div.innerHTML = `
                     <div class="truncate w-full sm:w-auto">
@@ -608,6 +607,7 @@
                     </div>
                 `;
                 container.appendChild(div);
+            } // <-- Fixed: This loop closing bracket was missing!
 
             // Optional notice if the filter is active
             if (filterOperator && renderedCount > 0) {
@@ -625,7 +625,7 @@
                 statsContainer.innerHTML = '';
                 for (let op in operatorStats) {
                     const stat = operatorStats[op];
-                    const isFiltered = (filterOperator === op); // Highlights the box if currently viewing
+                    const isFiltered = (filterOperator === op); 
                     
                     statsContainer.innerHTML += `
                         <div class="${isFiltered ? 'bg-amber-900/30 border-amber-500/50' : 'bg-gray-900/50 border-gray-700'} border p-3 rounded-xl flex justify-between items-center transition">
