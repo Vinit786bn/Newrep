@@ -368,10 +368,13 @@
             });
         }
 
-        function renderMenu() {
+       function renderMenu() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
-            menuData.forEach(item => {
+            menuData.forEach((item, index) => {
+                // This magic line automatically gives every item a unique ID!
+                item.id = index + 1; 
+                
                 const btn = document.createElement('button');
                 btn.className = "bg-gray-700/40 hover:bg-gray-700 text-left p-3 rounded-xl border border-gray-700 transition active:scale-95 flex flex-col justify-between h-24";
                 btn.onclick = () => addToCart(item);
