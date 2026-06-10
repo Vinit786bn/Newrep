@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>The Chinese Table POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        button{touch-action:manipulation}
+        .menu-btn:active{transform:scale(0.97);opacity:.9}
+        .hide-scroll::-webkit-scrollbar{display:none}
+        .category-tab.active{background-color:#b91c1c;color:white;border-color:#b91c1c}
+        .order-type-btn.active{background-color:#1e293b;color:white;border-color:#1e293b;border-width:2px}
+        .order-type-btn.has-items{border-color:#22c55e;color:#16a34a;background-color:#f0fdf4}
+        .selected-item{border-left:6px solid #22c55e !important;background-color:#f0fdf4 !important}
+        .check-mark{display:none;position:absolute;top:6px;right:8px;color:#22c55e;font-weight:bold}
+        .selected-item .check-mark{display:block}
+        .del-menu-btn{display:none;position:absolute;top:4px;left:4px;background:#ef4444;color:white;border-radius:50%;width:22px;height:22px;font-size:11px;align-items:center;justify-content:center;z-index:10;font-weight:900}
+        .edit-mode-on .del-menu-btn{display:flex}
+    </style>
+</head>
+<body class="bg-gray-100 font-sans pb-80">
+
+<div id="auth-screen" class="fixed inset-0 bg-red-700 z-[9999] flex flex-col items-center justify-center p-6 text-center">
+    <h1 class="text-white text-3xl font-black italic mb-2 tracking-wider">THE CHINESE TABLE</h1>
+    <p class="text-red-100 text-xs uppercase tracking-widest mb-8 font-bold">Cloud Terminal Access</p>
+    
+    <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm space-y-4">
+        <div>
+            <p class="text-[10px] text-gray-400 font-bold uppercase block text-left mb-2 pl-1">Step 1: Operator Identity</p>
+            <button id="google-login-btn" onclick="handleGoogleSignIn()" class="w-full bg-white border-2 border-gray-200 text-gray-700 font-bold py-3.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-3 text-sm active:scale-95 transition-transform">
+                <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Sign in with Google
+            </button>
+        </div>
+
+        <div id="step-2-store-key" class="opacity-40 pointer-events-none border-t pt-4">
+            <p class="text-[10px] text-gray-400 font-bold uppercase block text-left mb-2 pl-1">Step 2: Store Connection</p>
+            <input type="text" id="storeKeyInput" placeholder="Enter Access Key (e.g. TCT_MAIN)" class="w-full p-3 border border-gray-300 rounded-xl text-center outline-none text-sm font-bold uppercase tracking-wider focus:border-red-500 mb-3">
+            <button onclick="connectTerminalStream()" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl text-sm uppercase tracking-widest active:scale-95 transition-transform shadow-lg">
+                Enter Terminal
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="sticky top-0 z-50 bg-gray-100 shadow-md">
+    <header class="bg-red-700 text-white p-3 text-center relative">
+        <div class="absolute left-3 top-3.5 text-[8px] font-bold px-2 py-1 rounded-md uppercase" id="sync-status-badge">Checking...</div>
+        <h1 class="text-lg font-black uppercase italic tracking-wide">The Chinese Table</h1>
+        <p class="text-[9px] leading-tight opacity-90">SHOP 4, GROUND FLOOR, LANE NO 1, KOLDONGRI | 7045149471</p>
+        <button onclick="disconnectTerminal()" class="absolute right-3 top-3.5 text-[8px] bg-red-900 text-red-200 px-2 py-1 rounded-md font-bold uppercase tracking-wide shadow-inner">Log Out</button>
+    </header>
+
+    <div class="p-3 space-y-2 bg-gray-100 border-b border-gray-200">
+        <div class="flex gap-2">
+            <input type="text" id="menuSearch" onkeyup="searchMenu()" placeholder="Search dishes..." class="flex-1 p-3 rounded-xl shadow-inner border border-gray-300 outline-none text-sm font-medium">
+            <button onclick="addNewMenuItem()" class="bg-blue-600 text-white px-3 rounded-xl shadow-md text-[10px] font-bold uppercase min-w-[55px]">+ Item</button>
+            <button id="edit-menu-btn" onclick="toggleMenuEdit()" class="bg-orange-500 text-white px-3 rounded-xl shadow-md text-[10px] font-bold uppercase min-w-[55px]">Edit</button>
+        </div>
+
+        <div class="flex overflow-x-auto gap-2 pb-1 hide-scroll">
+            <button onclick="filterCategory('all',this)" class="category-tab active flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold">All</button>
+            <button onclick="filterCategory('veg-starter',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Veg Starter</button>
+            <button onclick="filterCategory('nonveg-starter',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Non-Veg Starter</button>
+            <button onclick="filterCategory('veg-soup',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Veg Soup</button>
+            <button onclick="filterCategory('nonveg-soup',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Non-Veg Soup</button>
+            <button onclick="filterCategory('veg-rice',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Veg Rice</button>
+            <button onclick="filterCategory('nonveg-rice',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Non-Veg Rice</button>
+            <button onclick="filterCategory('veg-noodle',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Veg Noodles</button>
+            <button onclick="filterCategory('nonveg-noodle',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Non-Veg Noodles</button>
+            <button onclick="filterCategory('chef-special',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Chef Special</button>
+            <button onclick="filterCategory('combo',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Combos</button>
+            <button onclick="filterCategory('drinks',this)" class="category-tab flex-shrink-0 px-4 py-2 rounded-full border border-red-700 text-[10px] font-bold uppercase">Drinks</button>
+        </div>
+    </div>
+</div>
+
+<main class="p-4 space-y-4">
+    <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+        <p class="text-[10px] text-gray-400 font-bold uppercase mb-2 text-center tracking-widest">Tables & Service</p>
+        <div class="grid grid-cols-4 gap-2">
+            <button id="btn-T1" onclick="switchOrderType('T1')" class="order-type-btn border py-3 rounded-xl text-[11px] font-black">T1</button>
+            <button id="btn-T2" onclick="switchOrderType('T2')" class="order-type-btn border py-3 rounded-xl text-[11px] font-black">T2</button>
+            <button id="btn-T3" onclick="switchOrderType('T3')" class="order-type-btn border py-3 rounded-xl text-[11px] font-black">T3</button>
+            <button id="btn-T4" onclick="switchOrderType('T4')" class="order-type-btn border py-3 rounded-xl text-[11px] font-black">T4</button>
+            <button id="btn-Takeaway" onclick="switchOrderType('Takeaway')" class="order-type-btn border py-3 rounded-xl text-[11px] font-black col-span-2">Takeaway</button>
+            <button id="btn-Delivery" onclick="switchOrderType('Delivery')" class="order-type-btn border py-3 rounded-xl text-[11px] font-black col-span-2">Delivery</button>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center">
+        <div><p class="text-[10px] text-gray-400 font-bold uppercase">Today's Sale</p><p class="text-xl font-black text-green-600">₹<span id="daily-sale-display">0</span></p></div>
+        <div class="text-right"><p class="text-[10px] text-gray-400 font-bold uppercase">Next Bill</p><p class="text-xl font-black text-slate-800">#<span id="bill-no-display">1</span></p></div>
+    </div>
+
+    <section id="item-grid" class="grid grid-cols-2 gap-3 pb-4"></section>
+
+    <section class="mt-4 border-t pt-4">
+        <h2 class="text-center text-[10px] font-bold text-orange-500 uppercase mb-3 tracking-widest">Saved Bills (Unpaid)</h2>
+        <div id="saved-container" class="space-y-2"></div>
+    </section>
+
+    <section class="mt-4 border-t pt-4">
+        <h2 class="text-center text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-widest">30-Day Bill History</h2>
+        <div id="history-container" class="space-y-2 max-h-72 overflow-y-auto pb-6"></div>
+    </section>
+
+    <div class="space-y-2 pt-2">
+        <button onclick="closeDayProcess()" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs tracking-wider">Close Day & Email Report</button>
+        <button onclick="forceResetMenu()" class="w-full text-gray-400 text-[9px] font-bold py-2 uppercase italic underline text-center block">Reset Original Menu</button>
+    </div>
+</main>
+
+<div class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.15)] p-4 rounded-t-[2rem] border-t border-gray-100 z-40 pb-safe">
+    <div class="flex justify-between items-center mb-2 px-1">
+        <span class="text-[11px] font-black text-red-700 uppercase tracking-wide" id="cart-title">Takeaway Bill</span>
+        <button onclick="applyDiscount()" class="text-[10px] font-bold bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-lg active:scale-95 transition-transform">Discount</button>
+    </div>
+    
+    <div id="cart-items" class="max-h-28 overflow-y-auto mb-2 text-[12px] space-y-2 border-b pb-2"></div>
+    
+    <div class="flex justify-between items-center gap-2">
+        <div class="flex-1">
+            <p class="text-[9px] text-gray-400 font-bold uppercase leading-none mb-0.5">Total</p>
+            <p class="text-xl font-black text-slate-900">₹<span id="total-amount">0</span></p>
+        </div>
+        <button onclick="clearCurrentOrder()" class="p-3 text-gray-400 bg-gray-100 rounded-xl text-[10px] uppercase font-bold active:scale-95">Clear</button>
+        <button onclick="saveCurrentBill()" class="px-4 py-3 bg-orange-500 text-white font-black rounded-xl shadow text-xs uppercase active:scale-95">Save</button>
+        <button onclick="handlePrint()" class="flex-[2] bg-green-600 text-white font-black py-3 rounded-xl shadow-lg uppercase text-sm active:scale-95">Print Bill</button>
+    </div>
+</div>
+
+<div id="custom-modal" style="display:none" class="fixed inset-0 bg-black/60 z-[9998] flex items-end">
+    <div class="bg-white rounded-t-3xl p-6 w-full shadow-2xl">
+        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Add to Order</p>
+        <h3 id="modal-item-name" class="font-black text-base uppercase leading-tight text-slate-800"></h3>
+        <p id="modal-item-price" class="text-green-600 font-black text-xl mb-3"></p>
+        <label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Customization / Special Note</label>
+        <textarea id="modal-note" placeholder="e.g. less spicy, extra sauce, no onion..." class="w-full border border-gray-300 rounded-xl p-3 text-sm outline-none resize-none h-20 mb-4 focus:border-red-500"></textarea>
+        <div class="flex gap-3">
+            <button onclick="closeCustomModal()" class="flex-1 py-3.5 rounded-xl border border-gray-300 font-black text-gray-500 uppercase text-xs tracking-wider">Cancel</button>
+            <button onclick="confirmAddItem()" class="flex-[2] py-3.5 rounded-xl bg-red-700 text-white font-black uppercase text-sm shadow-lg tracking-wider">Add to Order</button>
+        </div>
+    </div>
+</div>
+
+<div id="edit-modal" style="display:none" class="fixed inset-0 bg-black/60 z-[9997] flex items-end">
+    <div class="bg-white rounded-t-3xl p-5 w-full shadow-2xl" style="max-height:82vh;overflow-y:auto">
+        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Edit Bill</p>
+        <h3 id="edit-modal-title" class="font-black text-base uppercase mb-3 text-slate-800"></h3>
+        <div id="edit-modal-items" class="space-y-2 mb-3 border-b pb-3 text-[12px]"></div>
+        <div class="flex items-center gap-2 mb-4">
+            <span class="text-[11px] font-bold text-gray-500 uppercase">Discount ₹</span>
+            <input type="number" id="edit-discount" class="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none w-24 focus:border-blue-500" value="0">
+            <span class="ml-auto text-lg font-black">Total: ₹<span id="edit-modal-total">0</span></span>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="closeEditModal()" class="flex-1 py-3 rounded-xl border border-gray-300 font-black text-gray-500 text-xs uppercase">Cancel</button>
+            <button onclick="saveEditedBill()" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-black text-xs uppercase shadow">Save</button>
+            <button onclick="printEditedBill()" class="flex-[2] py-3 rounded-xl bg-green-600 text-white font-black text-sm uppercase shadow-lg">Print Now</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── FIREBASE APP, AUTH, AND DB REGISTRATION ─────────────────
+const firebaseConfig = {
+    apiKey: "AIzaSyA_S_y2VTWMe1f1UFumZEEW_ktbZtVzo1Y",
+    authDomain: "gen-lang-client-0044267372.firebaseapp.com",
+    databaseURL: "https://gen-lang-client-0044267372-default-rtdb.firebaseio.com",
+    projectId: "gen-lang-client-0044267372",
+    storageBucket: "gen-lang-client-0044267372.firebasestorage.app",
+    messagingSenderId: "901953259613",
+    appId: "1:901953259613:web:6fefb1ac72519618d065b4"
+};
+
+let db, auth;
+let isCloudSynced = false;
+
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    auth = firebase.auth();
+    isCloudSynced = true;
+} catch (e) {
+    console.error("Firebase startup failed:", e);
+}
+
+const HOTEL_EMAIL = "thechinesetable7045@gmail.com";
+let currentUser = null; 
+let storeKey = null;
+
+const MASTER_MENU_DATA = [
+    // VEG SOUP
+    {name:"Manchow Soup",price:150,cat:"veg-soup"},
+    {name:"Clear Soup",price:160,cat:"veg-soup"},
+    {name:"Sweet Corn Soup",price:180,cat:"veg-soup"},
+    {name:"Coriander Soup",price:200,cat:"veg-soup"},
+    {name:"Hot & Sour Soup",price:220,cat:"veg-soup"},
+    {name:"Black Pepper Soup",price:220,cat:"veg-soup"},
+    // NON-VEG SOUP
+    {name:"Chicken Manchow Soup",price:160,cat:"nonveg-soup"},
+    {name:"Chicken Clear Soup",price:170,cat:"nonveg-soup"},
+    {name:"Chicken Sweet Corn Soup",price:190,cat:"nonveg-soup"},
+    {name:"Chicken Coriander Soup",price:210,cat:"nonveg-soup"},
+    {name:"Chicken Hot & Sour Soup",price:230,cat:"nonveg-soup"},
+    {name:"Chicken Black Pepper Soup",price:230,cat:"nonveg-soup"},
+    // VEG STARTERS
+    {name:"Veg Crispy",price:210,cat:"veg-starter"},
+    {name:"Potato Honey Glazed",price:250,cat:"veg-starter"},
+    {name:"Veg Manchurian",price:210,cat:"veg-starter"},
+    {name:"Veg Green Curry",price:330,cat:"veg-starter"},
+    {name:"Veg Red Curry",price:330,cat:"veg-starter"},
+    {name:"Paneer Crispy",price:260,cat:"veg-starter"},
+    {name:"Paneer Chilly",price:230,cat:"veg-starter"},
+    {name:"Veg Khaosuey",price:369,cat:"veg-starter"},
+    {name:"Paneer Hara Bhara",price:230,cat:"veg-starter"},
+    {name:"Soyabean Chilly",price:230,cat:"veg-starter"},
+    {name:"Mushroom Chilly Dry",price:260,cat:"veg-starter"},
+    {name:"Paneer Kung Pao",price:260,cat:"veg-starter"},
+    {name:"Paneer Black Bean",price:280,cat:"veg-starter"},
+    // NON-VEG STARTERS
+    {name:"Chicken Lollypop",price:150,cat:"nonveg-starter"},
+    {name:"Chicken Lollypop Gravy",price:180,cat:"nonveg-starter"},
+    {name:"Chicken Manchurian",price:210,cat:"nonveg-starter"},
+    {name:"Chicken 65",price:230,cat:"nonveg-starter"},
+    {name:"Chicken Chilly",price:240,cat:"nonveg-starter"},
+    {name:"Chicken Heaven",price:300,cat:"nonveg-starter"},
+    {name:"Chicken Manchurian Gravy",price:260,cat:"nonveg-starter"},
+    {name:"Chicken Kung Pao",price:260,cat:"nonveg-starter"},
+    {name:"Chicken Crispy",price:280,cat:"nonveg-starter"},
+    {name:"Chicken Hara Bhara",price:280,cat:"nonveg-starter"},
+    {name:"Chicken Red Curry",price:350,cat:"nonveg-starter"},
+    {name:"Chicken Green Curry",price:350,cat:"nonveg-starter"},
+    {name:"Chicken Khaosuey",price:399,cat:"nonveg-starter"},
+    {name:"Chicken Black Pepper",price:280,cat:"nonveg-starter"},
+    {name:"Chicken Black Bean",price:280,cat:"nonveg-starter"},
+    {name:"Chicken Barbeque",price:330,cat:"nonveg-starter"},
+    {name:"Chicken Butter Garlic",price:330,cat:"nonveg-starter"},
+    {name:"Chicken Honey Glazed",price:330,cat:"nonveg-starter"},
+    // VEG RICE
+    {name:"Fried Rice (H)",price:110,cat:"veg-rice"},
+    {name:"Fried Rice (F)",price:170,cat:"veg-rice"},
+    {name:"Schezwan Rice (H)",price:120,cat:"veg-rice"},
+    {name:"Schezwan Rice (F)",price:200,cat:"veg-rice"},
+    {name:"Paneer Rice (H)",price:150,cat:"veg-rice"},
+    {name:"Paneer Rice (F)",price:220,cat:"veg-rice"},
+    {name:"Triple Rice (H)",price:150,cat:"veg-rice"},
+    {name:"Triple Rice (F)",price:250,cat:"veg-rice"},
+    {name:"Manchurian Rice",price:210,cat:"veg-rice"},
+    {name:"Korean Rice",price:230,cat:"veg-rice"},
+    {name:"Green Garlic Rice",price:230,cat:"veg-rice"},
+    {name:"Chilly Garlic Rice",price:230,cat:"veg-rice"},
+    {name:"Bunts Garlic Rice",price:230,cat:"veg-rice"},
+    {name:"Pot Rice",price:250,cat:"veg-rice"},
+    {name:"Special Rice",price:300,cat:"veg-rice"},
+    {name:"Chopper Rice",price:310,cat:"veg-rice"},
+    {name:"Box Rice",price:320,cat:"veg-rice"},
+    {name:"Veg Green Thai Curry",price:350,cat:"veg-rice"},
+    {name:"Veg Red Thai Curry",price:350,cat:"veg-rice"},
+    // NON-VEG RICE
+    {name:"Egg Rice (H)",price:100,cat:"nonveg-rice"},
+    {name:"Egg Rice (F)",price:170,cat:"nonveg-rice"},
+    {name:"Chicken Fried Rice (H)",price:120,cat:"nonveg-rice"},
+    {name:"Chicken Fried Rice (F)",price:180,cat:"nonveg-rice"},
+    {name:"Chicken Schezwan Rice (H)",price:130,cat:"nonveg-rice"},
+    {name:"Chicken Schezwan Rice (F)",price:220,cat:"nonveg-rice"},
+    {name:"Chicken Triple Rice (H)",price:160,cat:"nonveg-rice"},
+    {name:"Chicken Triple Rice (F)",price:260,cat:"nonveg-rice"},
+    {name:"Chicken Green Garlic Rice",price:260,cat:"nonveg-rice"},
+    {name:"Chicken Bunts Garlic Rice",price:240,cat:"nonveg-rice"},
+    {name:"Chicken Chilly Garlic Rice",price:280,cat:"nonveg-rice"},
+    {name:"Chicken Pot Rice",price:280,cat:"nonveg-rice"},
+    {name:"Chicken Korean Rice",price:280,cat:"nonveg-rice"},
+    {name:"Chicken Special Rice",price:310,cat:"nonveg-rice"},
+    {name:"Chicken Chopper Rice",price:320,cat:"nonveg-rice"},
+    {name:"Chicken Box Rice",price:330,cat:"nonveg-rice"},
+    {name:"Chicken Green Thai Curry",price:375,cat:"nonveg-rice"},
+    {name:"Chicken Red Thai Curry",price:375,cat:"nonveg-rice"},
+    // VEG NOODLES
+    {name:"Hakka Noodles (H)",price:110,cat:"veg-noodle"},
+    {name:"Hakka Noodles (F)",price:180,cat:"veg-noodle"},
+    {name:"Schezwan Noodles (H)",price:120,cat:"veg-noodle"},
+    {name:"Schezwan Noodles (F)",price:200,cat:"veg-noodle"},
+    {name:"Triple Noodles (H)",price:130,cat:"veg-noodle"},
+    {name:"Triple Noodles (F)",price:240,cat:"veg-noodle"},
+    {name:"Pan Fry Noodles",price:250,cat:"veg-noodle"},
+    {name:"Singaporean Noodles",price:270,cat:"veg-noodle"},
+    {name:"Chilly Garlic Noodles",price:270,cat:"veg-noodle"},
+    {name:"Chinese Chopsuey",price:270,cat:"veg-noodle"},
+    // NON-VEG NOODLES
+    {name:"Egg Noodles (H)",price:100,cat:"nonveg-noodle"},
+    {name:"Egg Noodles (F)",price:180,cat:"nonveg-noodle"},
+    {name:"Chicken Hakka Noodles (H)",price:120,cat:"nonveg-noodle"},
+    {name:"Chicken Hakka Noodles (F)",price:200,cat:"nonveg-noodle"},
+    {name:"Chicken Schezwan Noodles (H)",price:130,cat:"nonveg-noodle"},
+    {name:"Chicken Schezwan Noodles (F)",price:220,cat:"nonveg-noodle"},
+    {name:"Chicken Triple Noodles (H)",price:150,cat:"nonveg-noodle"},
+    {name:"Chicken Triple Noodles (F)",price:250,cat:"nonveg-noodle"},
+    {name:"Chicken Pan Fry Noodles",price:280,cat:"nonveg-noodle"},
+    {name:"Chicken Singaporean Noodles",price:280,cat:"nonveg-noodle"},
+    {name:"Chicken Chilly Garlic Noodles",price:280,cat:"nonveg-noodle"},
+    {name:"Chicken Chinese Chopsuey",price:280,cat:"nonveg-noodle"},
+    // CHEF SPECIAL
+    {name:"Chicken Lemon Pepper Chest",price:300,cat:"chef-special"},
+    {name:"Chicken Barbeque Sauce Dry",price:300,cat:"chef-special"},
+    {name:"Jackpot Rice",price:550,cat:"chef-special"},
+    {name:"Jackpot Noodles",price:550,cat:"chef-special"},
+    // COMBOS
+    {name:"Veg Lunch Combo",price:200,cat:"combo"},
+    {name:"Non-Veg Lunch Combo",price:220,cat:"combo"},
+    // DRINKS
+    {name:"Water Bottle (Big)",price:20,cat:"drinks"},
+    {name:"Water Bottle (Small)",price:10,cat:"drinks"},
+    {name:"Glass Cold Drink",price:15,cat:"drinks"},
+    {name:"Small Soft Drink",price:20,cat:"drinks"},
+    {name:"Medium Soft Drink",price:40,cat:"drinks"},
+    {name:"Maaza Glass",price:15,cat:"drinks"}
+];
+
+let menu = MASTER_MENU_DATA;
+let history = [];
+let savedBills = [];
+let billNo = 1;
+let dailySale = 0;
+let activeOrders = {
+    'T1':{items:[],discount:0},'T2':{items:[],discount:0},'T3':{items:[],discount:0},
+    'T4':{items:[],discount:0},'Takeaway':{items:[],discount:0},'Delivery':{items:[],discount:0}
+};
+
+let currentType = 'Takeaway';
+let printerChar = null;
+let currentCat = 'all';
+let menuEditMode = false;
+let pendingItem = null;
+let editingBill = null;
+
+// ─── GOOGLE AUTHENTICATION & LOGIN FLOW ─────────────────────────
+function handleGoogleSignIn() {
+    if (!auth) return alert("Firebase Auth is not configured properly. Check your keys!");
+    
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then((result) => {
+        currentUser = result.user;
+        document.getElementById('google-login-btn').innerHTML = `<span class="text-green-600 font-black">✓ Verified: ${currentUser.displayName || currentUser.email}</span>`;
+        document.getElementById('step-2-store-key').classList.remove('opacity-40', 'pointer-events-none');
+        
+        // Auto-fill existing store key cache
+        const cachedKey = localStorage.getItem('tct_stream_store_key');
+        if (cachedKey) { document.getElementById('storeKeyInput').value = cachedKey; }
+    }).catch(err => {
+        alert("Google Login Failed. Ensure you are running this over Live Server (http://localhost) and not directly as a file (file://).\nError: " + err.message);
+    });
+}
+
+// Track existing login state when app opens
+document.addEventListener("DOMContentLoaded", () => {
+    updateBadge();
+    if(auth) {
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('google-login-btn').innerHTML = `<span class="text-green-600 font-black">✓ Verified: ${currentUser.displayName || currentUser.email}</span>`;
+                document.getElementById('step-2-store-key').classList.remove('opacity-40', 'pointer-events-none');
+                
+                const cachedKey = localStorage.getItem('tct_stream_store_key');
+                if(cachedKey) {
+                    storeKey = cachedKey;
+                    document.getElementById('auth-screen').style.display = 'none';
+                    initializeGranularListeners();
+                }
+            }
+        });
+    }
+});
+
+function connectTerminalStream() {
+    const keyInput = document.getElementById('storeKeyInput').value.trim().toUpperCase();
+    if(!keyInput || !currentUser) { alert("Please complete Google Auth and provide a Store Key."); return; }
+    
+    storeKey = keyInput;
+    localStorage.setItem('tct_stream_store_key', storeKey);
+    
+    document.getElementById('auth-screen').style.display = 'none';
+    initializeGranularListeners();
+}
+
+function disconnectTerminal() {
+    if(!confirm("Sign out and disconnect from live data stream?")) return;
+    localStorage.removeItem('tct_stream_store_key');
+    if(auth) auth.signOut();
+    location.reload();
+}
+
+// Update visual sync badge helper
+function updateBadge() {
+    const b = document.getElementById('sync-status-badge');
+    if (isCloudSynced) {
+        b.innerText = "🟢 Sync On";
+        b.className = "absolute left-3 top-3.5 text-[8px] bg-green-950 text-green-300 px-2 py-1 rounded-md font-bold uppercase tracking-wide shadow-sm animate-pulse";
+    } else {
+        b.innerText = "🔴 Offline";
+        b.className = "absolute left-3 top-3.5 text-[8px] bg-yellow-900 text-yellow-200 px-2 py-1 rounded-md font-bold uppercase tracking-wide";
+    }
+}
+
+// ─── GRANULAR PATH CONFIGURATION SYSTEM (Fixes Disappearing Overwrites) ───
+function initializeGranularListeners() {
+    if (!isCloudSynced) return;
+
+    // 1. Listen to individual cart channels independently
+    Object.keys(activeOrders).forEach(type => {
+        db.ref(`stores/${storeKey}/activeOrders/${type}`).on('value', snapshot => {
+            const data = snapshot.val();
+            activeOrders[type] = data || { items: [], discount: 0 };
+            if(type === currentType) renderCart();
+            refreshOrderHighlights();
+        });
+    });
+
+    // 2. Maps database records directly to prevent array collision wipes
+    db.ref(`stores/${storeKey}/savedBills`).on('value', snapshot => {
+        const data = snapshot.val() || {};
+        savedBills = Object.keys(data).map(key => ({ ...data[key], cloudRecordId: key }));
+        renderSaved();
+    });
+
+    // 3. Monitor individual transactional configuration entries
+    db.ref(`stores/${storeKey}/meta`).on('value', snapshot => {
+        const data = snapshot.val();
+        if(data) {
+            billNo = parseInt(data.billNo) || 1;
+            dailySale = parseFloat(data.dailySale) || 0;
+            updateStats();
+        }
+    });
+
+    // 4. Map historic transaction paths safely
+    db.ref(`stores/${storeKey}/history`).on('value', snapshot => {
+        const data = snapshot.val() || {};
+        history = Object.keys(data).map(key => ({ ...data[key], cloudRecordId: key }));
+        renderHistory();
+    });
+
+    // 5. Shared digital menu asset
+    db.ref(`stores/${storeKey}/menu`).on('value', snapshot => {
+        menu = snapshot.val() || MASTER_MENU_DATA;
+        renderMenu(currentCat);
+    });
+}
+
+// ─── APP INTERFACE RENDERERS ──────────────────────────────
+function switchOrderType(type) {
+    currentType = type;
+    document.getElementById('cart-title').innerText = `${type} Bill`;
+    document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-${type}`).classList.add('active');
+    renderCart();
+    renderMenu(currentCat);
+}
+function refreshOrderHighlights() {
+    Object.keys(activeOrders).forEach(k => {
+        const btn = document.getElementById(`btn-${k}`);
+        if (!btn) return;
+        const itemsCount = activeOrders[k] && activeOrders[k].items ? activeOrders[k].items.length : 0;
+        btn.classList.toggle('has-items', itemsCount > 0);
+    });
+}
+
+// ─── CART AND ORDER FLOWS ─────────────────────────────────
+function openCustomModal(name, price) {
+    pendingItem = { name, price };
+    document.getElementById('modal-item-name').innerText = name;
+    document.getElementById('modal-item-price').innerText = `₹${price}`;
+    document.getElementById('modal-note').value = '';
+    document.getElementById('custom-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('modal-note').focus(), 200);
+}
+function closeCustomModal() {
+    document.getElementById('custom-modal').style.display = 'none';
+    pendingItem = null;
+}
+function confirmAddItem() {
+    if (!pendingItem) return;
+    const note = document.getElementById('modal-note').value.trim();
+    if (!activeOrders[currentType].items) activeOrders[currentType].items = [];
+    
+    // Assign Google ID Name to specific cart item
+    const activeUserName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "System";
+    
+    activeOrders[currentType].items.push({ 
+        name: pendingItem.name, 
+        price: pendingItem.price, 
+        id: Date.now(), 
+        note,
+        addedBy: activeUserName
+    });
+    
+    if (isCloudSynced) {
+        db.ref(`stores/${storeKey}/activeOrders/${currentType}`).set(activeOrders[currentType]);
+    } else {
+        renderCart(); refreshOrderHighlights();
+    }
+    closeCustomModal();
+}
+function deleteItem(uid) {
+    activeOrders[currentType].items = activeOrders[currentType].items.filter(i => i.id !== uid);
+    if (isCloudSynced) {
+        db.ref(`stores/${storeKey}/activeOrders/${currentType}`).set(activeOrders[currentType]);
+    } else {
+        renderCart(); refreshOrderHighlights();
+    }
+}
+function renderCart() {
+    const c = document.getElementById('cart-items');
+    const order = activeOrders[currentType];
+    if (!order || !order.items || !order.items.length) { c.innerHTML = `<p class="text-center italic py-3 text-gray-400">Order empty</p>`; updateNetDisplay(); return; }
+    c.innerHTML = order.items.map(item => `
+        <div class="flex justify-between items-start py-1.5 gap-2 border-b border-gray-50 last:border-0">
+            <div class="flex-1 min-w-0">
+                <span class="font-bold uppercase block truncate text-slate-700">${item.name}</span>
+                <div class="flex items-center gap-2 mt-0.5">
+                    ${item.note ? `<span class="text-[10px] text-orange-500 italic block">${item.note}</span>` : ''}
+                    <span class="text-[8px] bg-slate-200 px-1 py-0.2 rounded text-slate-500 font-medium">By: ${item.addedBy || 'System'}</span>
+                </div>
+            </div>
+            <b class="shrink-0 text-slate-600">₹${item.price}</b>
+            <button onclick="deleteItem(${item.id})" class="text-red-500 font-black px-2 text-base shrink-0 active:scale-110">✕</button>
+        </div>`).join('');
+    updateNetDisplay();
+}
+function applyDiscount() {
+    let amt = prompt("Discount amount (₹):", activeOrders[currentType].discount);
+    if (amt === null) return;
+    activeOrders[currentType].discount = parseFloat(amt) || 0;
+    if (isCloudSynced) {
+        db.ref(`stores/${storeKey}/activeOrders/${currentType}`).set(activeOrders[currentType]);
+    } else {
+        updateNetDisplay();
+    }
+}
+function updateNetDisplay() {
+    const order = activeOrders[currentType];
+    if(!order) return;
+    const sub = order.items ? order.items.reduce((s, i) => s + i.price, 0) : 0;
+    const net = Math.max(0, sub - (order.discount || 0));
+    document.getElementById('total-amount').innerText = net;
+}
+function clearCurrentOrder() {
+    if (!confirm(`Clear items for ${currentType}?`)) return;
+    activeOrders[currentType] = { items: [], discount: 0 };
+    if (isCloudSynced) {
+        db.ref(`stores/${storeKey}/activeOrders/${currentType}`).set(activeOrders[currentType]);
+    } else {
+        renderCart(); refreshOrderHighlights();
+    }
+}
+
+// ─── BULLETPROOF SUSPENDED RECORD PATHING (Shared Unpaid Shelf) ───
+function saveCurrentBill() {
+    const order = activeOrders[currentType];
+    if (!order || !order.items.length) { alert("No items to save."); return; }
+    
+    const now = new Date();
+    const timeStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const sub = order.items.reduce((s, i) => s + i.price, 0);
+    const total = Math.max(0, sub - (order.discount || 0));
+    const activeUserName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "System";
+
+    const billPayload = {
+        type: currentType,
+        items: [...order.items],
+        discount: order.discount || 0,
+        total,
+        time: timeStr,
+        timestamp: new Date().toISOString(),
+        suspendedBy: activeUserName
+    };
+
+    if (isCloudSynced) {
+        // Appends to an independent node location to block collisions
+        const uniqueBillNodeKey = db.ref(`stores/${storeKey}/savedBills`).push().key;
+        db.ref(`stores/${storeKey}/savedBills/${uniqueBillNodeKey}`).set(billPayload);
+        // Wipe local active cache channel location safely
+        db.ref(`stores/${storeKey}/activeOrders/${currentType}`).set({ items: [], discount: 0 });
+    } else {
+        savedBills.push({ ...billPayload, cloudRecordId: 'local_' + Date.now() });
+        activeOrders[currentType] = { items: [], discount: 0 };
+        renderSaved(); renderCart(); refreshOrderHighlights();
+    }
+    alert(`✅ Order suspended successfully.`);
+}
+function renderSaved() {
+    const c = document.getElementById('saved-container');
+    if (!savedBills.length) { c.innerHTML = `<p class="text-center italic text-gray-400 text-[11px] py-2">No saved bills</p>`; return; }
+    c.innerHTML = savedBills.slice().reverse().map((b, ri) => {
+        const arrayIndexId = savedBills.length - 1 - ri;
+        return `<div class="bg-orange-50 border border-orange-200 p-3 rounded-xl flex justify-between items-center text-[12px] shadow-sm">
+            <div class="flex-1 min-w-0">
+                <span class="bg-orange-400 text-white text-[8px] font-black px-2 py-0.5 rounded-full mr-1 uppercase align-middle">Saved</span>
+                <b>${b.type}</b> | ₹${b.total}<br>
+                <span class="text-gray-400 text-[9px]">${b.time} | Op: ${b.suspendedBy || 'System'}</span>
+            </div>
+            <div class="flex gap-1 shrink-0 ml-2">
+                <button onclick="loadSavedToCart(${arrayIndexId})" class="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg font-bold text-[11px] active:scale-95">Edit</button>
+                <button onclick="openPrintSaved(${arrayIndexId})" class="bg-green-100 text-green-700 px-3 py-2 rounded-lg font-bold text-[11px] active:scale-95">Print</button>
+                <button onclick="deleteSavedBill(${arrayIndexId})" class="bg-red-100 text-red-700 px-2.5 py-2 rounded-lg font-bold text-[11px] active:scale-95">✕</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+function loadSavedToCart(idx) {
+    const b = savedBills[idx];
+    if (activeOrders[b.type].items.length > 0 && !confirm(`${b.type} already has items. Replace with saved bill?`)) return;
+    
+    activeOrders[b.type] = { items: [...b.items], discount: b.discount };
+    
+    if (isCloudSynced) {
+        db.ref(`stores/${storeKey}/savedBills/${b.cloudRecordId}`).remove();
+        db.ref(`stores/${storeKey}/activeOrders/${b.type}`).set(activeOrders[b.type]);
+    } else {
+        savedBills.splice(idx, 1);
+        renderSaved(); renderCart(); refreshOrderHighlights();
+    }
+    switchOrderType(b.type);
+}
+function openPrintSaved(idx) {
+    const b = savedBills[idx];
+    editingBill = { source: 'saved', index: idx, bill: JSON.parse(JSON.stringify(b)) };
+    openEditModal(`${b.type} — Saved Bill`, editingBill.bill);
+}
+function deleteSavedBill(idx) {
+    if (!confirm("Delete this saved bill?")) return;
+    const b = savedBills[idx];
+    if (isCloudSynced) {
+        db.ref(`stores/${storeKey}/savedBills/${b.cloudRecordId}`).remove();
+    } else {
+        savedBills.splice(idx, 1);
+        renderSaved();
+    }
+}
+
+// ─── BILL EDITING TERMINAL MODALS ─────────────────────────
+function openEditModal(title, bill) {
+    document.getElementById('edit-modal-title').innerText = title;
+    document.getElementById('edit-discount').value = bill.discount || 0;
+    document.getElementById('edit-modal').style.display = 'flex';
+    renderEditModalItems();
+}
+function renderEditModalItems() {
+    const bill = editingBill.bill;
+    const c = document.getElementById('edit-modal-items');
+    if (!bill.items || !bill.items.length) { c.innerHTML = `<p class="italic text-gray-400 text-center py-2">No items</p>`; updateEditTotal(); return; }
+    c.innerHTML = bill.items.map((item, i) => `
+        <div class="flex justify-between items-start py-1.5 gap-1 border-b border-gray-100">
+            <div class="flex-1 min-w-0">
+                <span class="font-bold uppercase block text-[11px] text-slate-700 truncate">${item.name}</span>
+                ${item.note ? `<span class="text-[9px] text-orange-500 italic">${item.note}</span>` : ''}
+            </div>
+            <b class="mr-2 shrink-0 text-[11px] text-slate-600">₹${item.price}</b>
+            <button onclick="removeEditItem(${i})" class="text-red-500 font-black px-2 shrink-0 active:scale-110">✕</button>
+        </div>`).join('');
+    updateEditTotal();
+}
+function removeEditItem(i) {
+    editingBill.bill.items.splice(i, 1);
+    renderEditModalItems();
+}
+function updateEditTotal() {
+    const disc = parseFloat(document.getElementById('edit-discount').value) || 0;
+    editingBill.bill.discount = disc;
+    const sub = editingBill.bill.items.reduce((s, x) => s + x.price, 0);
+    const net = Math.max(0, sub - disc);
+    editingBill.bill.total = net;
+    document.getElementById('edit-modal-total').innerText = net;
+}
+document.addEventListener('input', e => { if (e.target.id === 'edit-discount') updateEditTotal(); });
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+    editingBill = null;
+}
+function saveEditedBill() {
+    updateEditTotal();
+    const b = editingBill.bill;
+    if (editingBill.source === 'saved') {
+        if (isCloudSynced) {
+            db.ref(`stores/${storeKey}/savedBills/${savedBills[editingBill.index].cloudRecordId}`).set(b);
+        } else {
+            savedBills[editingBill.index] = b; renderSaved();
+        }
+    } else {
+        const oldTotal = history[editingBill.index].total;
+        const adjustedSaleValue = Math.max(0, dailySale - oldTotal + b.total);
+        if (isCloudSynced) {
+            db.ref(`stores/${storeKey}/history/${history[editingBill.index].cloudRecordId}`).set(b);
+            db.ref(`stores/${storeKey}/meta`).set({ billNo, dailySale: adjustedSaleValue });
+        } else {
+            history[editingBill.index] = b; dailySale = adjustedSaleValue;
+            renderHistory(); updateStats();
+        }
+    }
+    closeEditModal();
+}
+async function printEditedBill() {
+    updateEditTotal();
+    const b = editingBill.bill;
+    const src = editingBill.source;
+    const srcIdx = editingBill.index;
+    closeEditModal();
+    
+    await doPrint(b.items, b.discount, b.total, b.type, src === 'saved' ? `SAVED` : `#${b.id}`);
+    if (src === 'saved') {
+        const now = new Date();
+        const timeStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const activeUserName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "System";
+        
+        const historyPayload = { id: billNo, total: b.total, type: b.type, time: timeStr, timestamp: new Date().toISOString(), items: [...b.items], discount: b.discount, checkedOutBy: activeUserName };
+        const updatedSaleValue = dailySale + b.total;
+        const incrementalBillNo = billNo + 1;
+
+        if (isCloudSynced) {
+            db.ref(`stores/${storeKey}/savedBills/${savedBills[srcIdx].cloudRecordId}`).remove();
+            db.ref(`stores/${storeKey}/history`).push().set(historyPayload);
+            db.ref(`stores/${storeKey}/meta`).set({ billNo: incrementalBillNo, dailySale: updatedSaleValue });
+        } else {
+            history.push(historyPayload); dailySale = updatedSaleValue; billNo = incrementalBillNo;
+            savedBills.splice(srcIdx, 1);
+            renderSaved(); renderHistory(); updateStats();
+        }
+    }
+}
+
+// ─── HARDWARE INTERACTION ENGAGEMENTS ─────────────────────
+async function handlePrint() {
+    const order = activeOrders[currentType];
+    if (!order || !order.items.length) return;
+    const billTotal = parseFloat(document.getElementById('total-amount').innerText);
+    const success = await doPrint(order.items, order.discount, billTotal, currentType, `#${billNo}`);
+    if (success) {
+        const now = new Date();
+        const timeStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const activeUserName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "System";
+        
+        const historyPayload = { 
+            id: billNo, total: billTotal, type: currentType, time: timeStr, 
+            timestamp: new Date().toISOString(), items: [...order.items], 
+            discount: order.discount, checkedOutBy: activeUserName 
+        };
+        
+        const nextSaleVal = dailySale + billTotal;
+        const nextBillNo = billNo + 1;
+
+        if (isCloudSynced) {
+            db.ref(`stores/${storeKey}/activeOrders/${currentType}`).set({ items: [], discount: 0 });
+            db.ref(`stores/${storeKey}/history`).push().set(historyPayload);
+            db.ref(`stores/${storeKey}/meta`).set({ billNo: nextBillNo, dailySale: nextSaleVal });
+        } else {
+            history.push(historyPayload); dailySale = nextSaleVal; billNo = nextBillNo;
+            activeOrders[currentType] = { items: [], discount: 0 };
+            renderCart(); refreshOrderHighlights(); updateStats(); renderHistory(); switchOrderType(currentType);
+        }
+    }
+}
+async function doPrint(items, discount, total, type, billRef) {
+    try {
+        if (!printerChar) {
+            const device = await navigator.bluetooth.requestDevice({ filters: [{ name: 'SR588' }, { namePrefix: 'SR' }], optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] });
+            const server = await device.gatt.connect();
+            const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+            printerChar = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+        }
+        const enc = new TextEncoder();
+        const now = new Date();
+        const timeStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const activeUserName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "System";
+        
+        await printerChar.writeValue(new Uint8Array([0x1B, 0x40, 0x1B, 0x61, 0x01]));
+        await printerChar.writeValue(enc.encode("THE CHINESE TABLE\n"));
+        await printerChar.writeValue(enc.encode("SHOP 4, GROUND FLOOR, LANE 1\n"));
+        await printerChar.writeValue(enc.encode("NEAR APOORVA GYM, KOLDONGRI\n"));
+        await printerChar.writeValue(enc.encode("ANDHERI EAST, MUMBAI 400069\n"));
+        await printerChar.writeValue(enc.encode("Mob: 7045149471\n"));
+        await printerChar.writeValue(enc.encode(`ORDER: ${type} | BILL: ${billRef}\n`));
+        await printerChar.writeValue(enc.encode(`OP: ${activeUserName}\n`));
+        await printerChar.writeValue(enc.encode(`${timeStr}\n--------------------------------\n`));
+        for (let i of items) {
+            const name = i.name.substring(0, 20).padEnd(20);
+            const prc = i.price.toString().padStart(11);
+            await printerChar.writeValue(enc.encode(`${name} ${prc}\n`));
+            if (i.note) await printerChar.writeValue(enc.encode(`  >> ${i.note.substring(0, 28)}\n`));
+        }
+        await printerChar.writeValue(enc.encode(`--------------------------------\n`));
+        if (discount > 0) await printerChar.writeValue(enc.encode(`DISCOUNT:          -RS. ${discount}\n`));
+        await printerChar.writeValue(enc.encode(`TOTAL:              RS. ${total}\n\n\n\n\n`));
+        return true;
+    } catch (e) { alert("Printer Error: " + e.message); printerChar = null; return false; }
+}
+
+// ─── AUDITING LOG CHANNELS ─────────────────────────────────
+function renderHistory() {
+    const c = document.getElementById('history-container');
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const filtered = history.filter(b => new Date(b.timestamp).getTime() > cutoff);
+    if (!filtered.length) { c.innerHTML = `<p class="text-center italic text-gray-400 text-[11px] py-2">No transaction history</p>`; return; }
+    c.innerHTML = filtered.slice().reverse().map((b, ri) => {
+        const idx = history.length - 1 - ri;
+        return `<div class="bg-white p-3 rounded-xl flex justify-between items-center text-[12px] shadow-sm border border-gray-200 mb-1">
+            <div class="flex-1 min-w-0">
+                <b>#${b.id}</b> | ₹${b.total} (${b.type})<br>
+                <span class="text-gray-400 text-[9px]">${b.time} | Op: ${b.checkedOutBy || 'System'}</span>
+            </div>
+            <div class="flex gap-1 shrink-0 ml-1">
+                <button onclick="viewOldBill(${idx})" class="bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg font-bold text-[10px] active:scale-95">View</button>
+                <button onclick="openEditHistory(${idx})" class="bg-blue-100 text-blue-700 px-2 py-1.5 rounded-lg font-bold text-[10px] active:scale-95">Edit</button>
+                <button onclick="reprintBill(${idx})" class="bg-green-100 text-green-700 px-2 py-1.5 rounded-lg font-bold text-[10px] active:scale-95">🖨</button>
+                <button onclick="deleteOldBill(${idx})" class="bg-red-100 text-red-700 px-2 py-1.5 rounded-lg font-bold text-[10px] active:scale-95">✕</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+function viewOldBill(idx) {
+    const b = history[idx];
+    alert(`BILL #${b.id} | ${b.type}\n${b.time}\n\nItems:\n${b.items.map(i => `- ${i.name} ₹${i.price}${i.note ? '\n  >> ' + i.note : ''}`).join('\n')}\n\nDiscount: ₹${b.discount || 0}\nTotal: ₹${b.total}`);
+}
+function openEditHistory(idx) {
+    editingBill = { source: 'history', index: idx, bill: JSON.parse(JSON.stringify(history[idx])) };
+    openEditModal(`Bill #${history[idx].id} — ${history[idx].type}`, editingBill.bill);
+}
+async function reprintBill(idx) {
+    const b = history[idx];
+    await doPrint(b.items, b.discount || 0, b.total, b.type, `#${b.id} REPRINT`);
+}
+function deleteOldBill(idx) {
+    if (!confirm("Delete this bill? Daily sale will adjust.")) return;
+    const b = history[idx];
+    const adjustedSale = Math.max(0, dailySale - b.total);
+    if (isCloudSynced) {
+        db.ref(`stores/${storeKey}/history/${b.cloudRecordId}`).remove();
+        db.ref(`stores/${storeKey}/meta`).set({ billNo, dailySale: adjustedSale });
+    } else {
+        history.splice(idx, 1); dailySale = adjustedSale;
+        renderHistory(); updateStats();
+    }
+}
+
+// ─── MASTER CATALOG CONTROL MUTATIONS ──────────────────────
+function toggleMenuEdit() {
+    menuEditMode = !menuEditMode;
+    document.getElementById('edit-menu-btn').classList.toggle('bg-orange-500', !menuEditMode);
+    document.getElementById('edit-menu-btn').classList.toggle('bg-red-600', menuEditMode);
+    document.getElementById('edit-menu-btn').innerText = menuEditMode ? 'Done' : 'Edit';
+    document.getElementById('item-grid').classList.toggle('edit-mode-on', menuEditMode);
+}
+function deleteMenuItem(menuIdx, e) {
+    e.stopPropagation();
+    if (!confirm(`Delete "${menu[menuIdx].name}" from menu?`)) return;
+    menu.splice(menuIdx, 1);
+    if (isCloudSynced) db.ref(`stores/${storeKey}/menu`).set(menu);
+    else renderMenu(currentCat);
+}
+function addNewMenuItem() {
+    const n = prompt("Dish Name:");
+    if (!n) return;
+    const p = parseFloat(prompt("Price (₹):"));
+    if (!p) return;
+    const cats = "veg-starter, nonveg-starter, veg-soup, nonveg-soup, veg-rice, nonveg-rice, veg-noodle, nonveg-noodle, chef-special, combo, drinks";
+    const c = prompt(`Category:\n${cats}`);
+    if (!c) return;
+    menu.push({ name: n, price: p, cat: c.trim() });
+    if (isCloudSynced) db.ref(`stores/${storeKey}/menu`).set(menu);
+    else renderMenu(currentCat);
+}
+function filterCategory(cat, el) {
+    currentCat = cat;
+    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderMenu(cat);
+}
+function renderMenu(filter = 'all') {
+    const grid = document.getElementById('item-grid');
+    grid.innerHTML = '';
+    if (menuEditMode) grid.classList.add('edit-mode-on');
+    else grid.classList.remove('edit-mode-on');
+    menu.forEach((item, idx) => {
+        if (filter !== 'all' && item.cat !== filter) return;
+        const currentOrderItems = activeOrders[currentType] ? activeOrders[currentType].items : [];
+        const isInCart = currentOrderItems.some(c => c.name === item.name);
+        const btn = document.createElement('button');
+        btn.onclick = () => { if (menuEditMode) return; openCustomModal(item.name, item.price); };
+        btn.className = `menu-btn bg-white p-3 rounded-xl shadow-sm border-l-4 border-gray-200 relative text-left min-h-[70px] flex flex-col justify-between ${isInCart ? 'selected-item' : ''}`;
+        btn.innerHTML = `
+            <button class="del-menu-btn" onclick="deleteMenuItem(${idx}, event)">✕</button>
+            <span class="check-mark">✓</span>
+            <span class="block text-[11px] font-black uppercase leading-tight pr-4 text-slate-700 break-words w-full">${item.name}</span>
+            <span class="text-xs font-black text-slate-900 mt-1">₹${item.price}</span>`;
+        grid.appendChild(btn);
+    });
+}
+function searchMenu() {
+    const q = document.getElementById('menuSearch').value.toLowerCase();
+    if (!q) { renderMenu(currentCat); return; }
+    const grid = document.getElementById('item-grid');
+    grid.innerHTML = '';
+    menu.forEach((item, idx) => {
+        if (!item.name.toLowerCase().includes(q)) return;
+        const currentOrderItems = activeOrders[currentType] ? activeOrders[currentType].items : [];
+        const isInCart = currentOrderItems.some(c => c.name === item.name);
+        const btn = document.createElement('button');
+        btn.onclick = () => { if (menuEditMode) return; openCustomModal(item.name, item.price); };
+        btn.className = `menu-btn bg-white p-3 rounded-xl shadow-sm border-l-4 border-gray-200 relative text-left min-h-[70px] flex flex-col justify-between ${isInCart ? 'selected-item' : ''}`;
+        btn.innerHTML = `
+            <button class="del-menu-btn" onclick="deleteMenuItem(${idx}, event)">✕</button>
+            <span class="check-mark">✓</span>
+            <span class="block text-[11px] font-black uppercase leading-tight pr-4 text-slate-700 break-words w-full">${item.name}</span>
+            <span class="text-xs font-black text-slate-900 mt-1">₹${item.price}</span>`;
+        grid.appendChild(btn);
+    });
+}
+
+// ─── ADMIN PROCEDURES ─────────────────────────────────────
+async function closeDayProcess() {
+    if (!confirm("Close day? This will email the report and reset today's sale.")) return;
+    const report = `FINAL REPORT: THE CHINESE TABLE\nDate: ${new Date().toLocaleDateString()}\nBills Printed: ${billNo - 1}\nTotal Sale: Rs. ${dailySale}`;
+    try {
+        if (printerChar) {
+            const enc = new TextEncoder();
+            await printerChar.writeValue(enc.encode(`\nDAILY REPORT\nDate: ${new Date().toLocaleDateString()}\nSale: Rs. ${dailySale}\nBills: ${billNo - 1}\n\n\n\n`));
+        }
+    } catch (e) {}
+    window.location.href = `mailto:${HOTEL_EMAIL}?subject=Daily Report ${new Date().toLocaleDateString()}&body=${encodeURIComponent(report)}`;
+    dailySale = 0;
+    if (isCloudSynced) db.ref(`stores/${storeKey}/meta`).set({ billNo, dailySale });
+    else updateStats();
+}
+function updateStats() { document.getElementById('daily-sale-display').innerText = dailySale; document.getElementById('bill-no-display').innerText = billNo; }
+function forceResetMenu() {
+    if (!confirm("Reset menu to original? Your custom-added items will be kept. Bill history & sales will NOT be cleared.")) return;
+    const masterNames = new Set(MASTER_MENU_DATA.map(i => i.name));
+    const customItems = menu.filter(i => !masterNames.has(i.name));
+    menu = [...MASTER_MENU_DATA, ...customItems];
+    if (isCloudSynced) db.ref(`stores/${storeKey}/menu`).set(menu);
+    else renderMenu(currentCat);
+    alert(`✅ Menu reset! ${customItems.length} custom item(s) kept.`);
+}
+</script>
+</body>
+</html>
