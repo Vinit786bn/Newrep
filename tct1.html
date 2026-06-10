@@ -419,15 +419,19 @@
                 total += item.price * item.qty;
                 const row = document.createElement('div');
                 row.className = "flex justify-between items-center bg-gray-900/50 p-2.5 rounded-xl border border-gray-800";
-                row.innerHTML = `
+              row.innerHTML = `
                     <div class="flex-1 min-w-0 pr-2">
                         <p class="font-medium text-gray-200 truncate">${item.name}</p>
+                        ${item.note ? `<p class="text-[10px] text-blue-400 italic">Note: ${item.note}</p>` : ''}
                         <p class="text-xs text-amber-500/80">₹${item.price} x ${item.qty}</p>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <button onclick="updateCartQty(${item.id}, -1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold border border-gray-700 text-gray-300">-</button>
-                        <span class="w-6 text-center text-sm font-semibold">${item.qty}</span>
-                        <button onclick="updateCartQty(${item.id}, 1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold border border-gray-700 text-gray-300">+</button>
+                    <div class="flex flex-col items-end gap-1">
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="updateCartQty(${item.id}, -1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold border border-gray-700 text-gray-300">-</button>
+                            <span class="w-6 text-center text-sm font-semibold">${item.qty}</span>
+                            <button onclick="updateCartQty(${item.id}, 1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold border border-gray-700 text-gray-300">+</button>
+                        </div>
+                        <button onclick="addDishNote(${item.id})" class="text-[10px] text-gray-400 hover:text-white bg-gray-800 px-2 py-0.5 rounded border border-gray-700">✏️ Add Note</button>
                     </div>
                 `;
                 container.appendChild(row);
@@ -514,6 +518,75 @@
             if (confirm("Confirm settlement and archive this order?")) {
                 firebase.database().ref(`bills/${id}`).remove();
             }
+        }
+       function addDishNote(id) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                const note = prompt(`Add customization for ${item.name} (e.g., Extra Spicy, Less Oil):`, item.note || "");
+                if (note !== null) {
+                    item.note = note.trim();
+                    updateCartUI();
+                }
+            }
+        }
+        function printReceipt(billId) {
+            firebase.database().ref(`bills/${billId}`).once('value', (snapshot) => {
+                const bill = snapshot.val();
+                if (!bill) return;
+
+                // Create a temporary window formatted specifically for thermal printers
+                const printWindow = window.open('', '_blank', 'width=400,height=600');
+                
+                let itemsHtml = '';
+                bill.items.forEach(item => {
+                    itemsHtml += `
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px;">
+                            <span>${item.qty}x ${item.name}</span>
+                            <span>₹${item.price * item.qty}</span>
+                        </div>
+                        ${item.note ? `<div style="font-size: 10px; font-style: italic; margin-bottom: 4px;">- ${item.note}</div>` : ''}
+                    `;
+                });
+
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Receipt - Table ${bill.table}</title>
+                        <style>
+                            body { font-family: monospace; width: 100%; margin: 0; padding: 10px; color: #000; }
+                            .center { text-align: center; }
+                            .bold { font-weight: bold; }
+                            .divider { border-bottom: 1px dashed #000; margin: 8px 0; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="center bold" style="font-size: 16px;">THE CHINESE TABLE</div>
+                        <div class="center" style="font-size: 12px;">Andheri East, Mumbai</div>
+                        <div class="divider"></div>
+                        <div style="font-size: 12px;">Table: ${bill.table}</div>
+                        <div style="font-size: 12px;">Staff: ${bill.operator}</div>
+                        <div class="divider"></div>
+                        ${itemsHtml}
+                        <div class="divider"></div>
+                        <div style="display: flex; justify-content: space-between; font-size: 14px;" class="bold">
+                            <span>TOTAL</span>
+                            <span>₹${bill.total}</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="center" style="font-size: 10px;">Thank you for dining with us!</div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                
+                // Trigger the device's print dialog, then close the temp window
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 500);
+            });
         }
     </script>
 </body>
