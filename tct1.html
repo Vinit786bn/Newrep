@@ -52,6 +52,16 @@
                 Sign Out
             </button>
         </header>
+        <div id="staff-performance-panel" class="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-6 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-md font-bold text-gray-200">👥 Live Staff Performance</h2>
+                <button onclick="renderSavedBillsDashboard(window.lastKnownBills)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-600 transition shadow-sm">
+                    Show All Tables
+                </button>
+            </div>
+            <div id="staff-stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                </div>
+        </div>
 
         <div id="admin-panel" class="hidden bg-gray-800/50 border border-blue-500/30 p-4 rounded-2xl mb-6 shadow-xl">
             <h3 class="text-md font-bold text-blue-400 mb-3 flex items-center gap-2">
@@ -96,10 +106,16 @@
 
                 <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
                    <div class="flex justify-between items-center mb-3">
+   <div class="flex justify-between items-center mb-3">
     <h2 class="text-lg font-bold text-gray-200">Live Active Tables</h2>
-    <button onclick="settleAllBills()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-red-600/30 transition">
-        Settle All
-    </button>
+    <div class="flex gap-2">
+        <button onclick="sendEmailReport()" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-600/30 transition">
+            Email Report
+        </button>
+        <button onclick="settleAllBills()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-red-600/30 transition">
+            Settle All
+        </button>
+    </div>
 </div>
                     <div class="flex justify-between items-center bg-gray-900/80 p-3 rounded-xl mb-3 border border-gray-700 shadow-inner">
     <div>
@@ -344,24 +360,42 @@
                 
                 let count = 0;
                 for (let uid in users) {
-                    if (users[uid].approved === false) {
-                        count++;
-                        const card = document.createElement('div');
-                        card.className = "flex justify-between items-center bg-gray-700/60 p-3 rounded-xl border border-gray-600";
+                    // Do not show the Master Admin in this list
+                    if (users[uid].email === ADMIN_EMAIL) continue;
+
+                    count++;
+                    const isApproved = users[uid].approved;
+                    
+                    const card = document.createElement('div');
+                    card.className = "flex justify-between items-center bg-gray-700/60 p-3 rounded-xl border border-gray-600";
+                    
+                    if (!isApproved) {
+                        // Showing Pending Staff
                         card.innerHTML = `
                             <div class="truncate mr-2">
-                                <p class="font-bold text-white text-sm truncate">${users[uid].name}</p>
+                                <p class="font-bold text-white text-sm truncate">${users[uid].name} <span class="text-xs text-amber-500">(Pending)</span></p>
                                 <p class="text-xs text-gray-400 truncate">${users[uid].email}</p>
                             </div>
                             <button onclick="approveStaff('${uid}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">
                                 Approve
                             </button>
                         `;
-                        container.appendChild(card);
+                    } else {
+                        // Showing Active/Approved Staff
+                        card.innerHTML = `
+                            <div class="truncate mr-2">
+                                <p class="font-bold text-white text-sm truncate">${users[uid].name} <span class="text-xs text-emerald-400">(Active)</span></p>
+                                <p class="text-xs text-gray-400 truncate">${users[uid].email}</p>
+                            </div>
+                            <button onclick="revokeStaff('${uid}', '${users[uid].name}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/40 text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">
+                                Revoke
+                            </button>
+                        `;
                     }
+                    container.appendChild(card);
                 }
                 if (count === 0) {
-                    container.innerHTML = `<p class="text-gray-500 italic text-sm col-span-full">No pending approval requests.</p>`;
+                    container.innerHTML = `<p class="text-gray-500 italic text-sm col-span-full">No staff registered in the system yet.</p>`;
                 }
             });
         }
@@ -490,29 +524,54 @@
                 .catch(err => alert("Sync Failure: " + err.message));
         }
 
-       function renderSavedBillsDashboard(bills) {
+      function renderSavedBillsDashboard(bills, filterOperator = null) {
+            window.lastKnownBills = bills; // Save the database state for the filter button
+
             const container = document.getElementById('global-bills-container');
             const countTracker = document.getElementById('dashboard-bill-count');
             const revenueTracker = document.getElementById('dashboard-total-revenue');
+            const statsPanel = document.getElementById('staff-performance-panel');
+            const statsContainer = document.getElementById('staff-stats-container');
 
-            // If there are no bills, reset trackers to 0
+            // 1. Reset everything if the restaurant is empty
             if (!bills) {
                 container.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
                 if (countTracker) countTracker.innerText = '0';
                 if (revenueTracker) revenueTracker.innerText = '0';
+                if (statsPanel) statsPanel.classList.add('hidden');
                 return;
             }
 
+            if (statsPanel) statsPanel.classList.remove('hidden');
             container.innerHTML = '';
+            
             let totalBillsCount = 0;
             let totalRevenue = 0;
+            let operatorStats = {};
 
+            // 2. Crunch the numbers for the whole restaurant and each staff member
             for (let id in bills) {
                 const bill = bills[id];
                 
-                // Add to the live math trackers
                 totalBillsCount++;
                 totalRevenue += bill.total;
+
+                const opName = bill.operator || "Unknown";
+                if (!operatorStats[opName]) {
+                    operatorStats[opName] = { count: 0, revenue: 0 };
+                }
+                operatorStats[opName].count++;
+                operatorStats[opName].revenue += bill.total;
+            }
+
+            // 3. Render the specific bills (applying the staff filter if you clicked 'View')
+            let renderedCount = 0;
+            for (let id in bills) {
+                const bill = bills[id];
+                
+                // Skip this bill if we are filtering for a specific staff member
+                if (filterOperator && bill.operator !== filterOperator) continue; 
+                renderedCount++;
 
                 const div = document.createElement('div');
                 div.className = "bg-gray-900/40 border border-gray-800 p-3 rounded-xl flex justify-between items-center text-sm hover:border-gray-700 transition";
@@ -536,9 +595,37 @@
                 container.appendChild(div);
             }
 
-            // Update the HTML dashboard numbers
+            // Optional notice if the filter is active
+            if (filterOperator && renderedCount > 0) {
+                container.insertAdjacentHTML('afterbegin', `<div class="bg-amber-900/30 border border-amber-500/30 text-amber-400 text-xs text-center p-2 rounded-lg mb-2">Showing active tables only for: <b>${filterOperator}</b></div>`);
+            } else if (filterOperator && renderedCount === 0) {
+                container.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">No active tables for ${filterOperator}.</p>`;
+            }
+
+            // 4. Update the Master Totals Box
             if (countTracker) countTracker.innerText = totalBillsCount;
             if (revenueTracker) revenueTracker.innerText = totalRevenue;
+
+            // 5. Build the Top Staff Dashboard UI
+            if (statsContainer) {
+                statsContainer.innerHTML = '';
+                for (let op in operatorStats) {
+                    const stat = operatorStats[op];
+                    const isFiltered = (filterOperator === op); // Highlights the box if currently viewing
+                    
+                    statsContainer.innerHTML += `
+                        <div class="${isFiltered ? 'bg-amber-900/30 border-amber-500/50' : 'bg-gray-900/50 border-gray-700'} border p-3 rounded-xl flex justify-between items-center transition">
+                            <div class="truncate pr-2">
+                                <p class="font-bold text-white text-sm truncate">${op}</p>
+                                <p class="text-xs text-emerald-400 font-bold mt-0.5">₹${stat.revenue} <span class="text-gray-500 font-normal">(${stat.count} bills)</span></p>
+                            </div>
+                            <button onclick="renderSavedBillsDashboard(window.lastKnownBills, '${op}')" class="${isFiltered ? 'bg-amber-500 hover:bg-amber-600 text-gray-900' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'} px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-600 transition shrink-0">
+                                ${isFiltered ? 'Viewing' : 'View'}
+                            </button>
+                        </div>
+                    `;
+                }
+            }
         }
 
         function loadBillBackToCart(id) {
@@ -652,6 +739,76 @@
                     printWindow.close();
                 }, 500);
             });
+        }
+        function sendEmailReport() {
+            // 1. Verify Manager Access (Change "1234" to your actual PIN!)
+            const pin = prompt("Enter Manager PIN to generate email report:");
+            if (pin !== "7045") {
+                alert("Incorrect PIN. Access denied.");
+                return;
+            }
+
+            // 2. Ask for the destination email
+            const targetEmail = prompt("Enter the email address to send this report to:", "vinitbnarule@gmail.com");
+            if (!targetEmail) return; // Stop if they hit cancel
+
+            // 3. Fetch the data and build the email
+            firebase.database().ref('bills').once('value', (snapshot) => {
+                const bills = snapshot.val();
+                if (!bills) {
+                    alert("No active bills to send. The table is clear!");
+                    return;
+                }
+
+                let emailBody = "THE CHINESE TABLE - LIVE REVENUE REPORT\n";
+                emailBody += `Generated: ${new Date().toLocaleString("en-IN")}\n\n`;
+                
+                let totalRevenue = 0;
+                let billCount = 0;
+
+                // Loop through every table and format the text
+                for (let id in bills) {
+                    const bill = bills[id];
+                    totalRevenue += bill.total;
+                    billCount++;
+
+                    emailBody += `--- Table ${bill.table} ---\n`;
+                    emailBody += `Staff: ${bill.operator}\n`;
+                    emailBody += `Time: ${bill.timestampStr || "N/A"}\n`;
+                    
+                    bill.items.forEach(item => {
+                        emailBody += `${item.qty}x ${item.name} - Rs.${item.price * item.qty}\n`;
+                        if (item.note) emailBody += `   Note: ${item.note}\n`;
+                    });
+                    
+                    emailBody += `Bill Total: Rs.${bill.total}\n\n`;
+                }
+
+                // Add the grand total at the bottom
+                emailBody += `====================\n`;
+                emailBody += `TOTAL ACTIVE BILLS: ${billCount}\n`;
+                emailBody += `GRAND TOTAL REVENUE: Rs.${totalRevenue}\n`;
+
+                // 4. Encode the text so the email app can read it safely
+                const subject = encodeURIComponent(`The Chinese Table - Sales Report (${billCount} Bills)`);
+                const body = encodeURIComponent(emailBody);
+
+                // 5. Trigger the device's native email application
+                window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+            });
+        }
+        function revokeStaff(uid, staffName) {
+            // Check Manager PIN (Remember to change "1234" to your actual PIN!)
+            const pin = prompt(`CRITICAL ACTION: Enter Manager PIN to revoke POS access for ${staffName}:`);
+            if (pin !== "1234") {
+                alert("Incorrect PIN. Access denied.");
+                return;
+            }
+
+            if (confirm(`Are you sure you want to lock out ${staffName}? Their terminal will instantly shut down.`)) {
+                // This instantly changes their database status, forcing their screen to the Waiting Room
+                firebase.database().ref(`users/${uid}`).update({ approved: false });
+            }
         }
     </script>
 </body>
