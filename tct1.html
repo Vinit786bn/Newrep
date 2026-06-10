@@ -587,26 +587,27 @@
                 renderedCount++;
 
                 const div = document.createElement('div');
-                div.className = "bg-gray-900/40 border border-gray-800 p-3 rounded-xl flex justify-between items-center text-sm hover:border-gray-700 transition";
+                // Updated layout styles: Stacks vertically on mobile (flex-col), rows on desktop (sm:flex-row)
+                div.className = "bg-gray-900/40 border border-gray-800 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-sm hover:border-gray-700 transition";
                 div.innerHTML = `
-                    <div class="truncate mr-2">
+                    <div class="truncate w-full sm:w-auto">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-amber-500 text-md">Table ${bill.table}</span>
+                            <span class="font-bold text-amber-500 text-base">Table ${bill.table}</span>
                             <span class="text-[10px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded border border-gray-700 truncate">Op: ${bill.operator}</span>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1 truncate">${bill.items.map(i => `${i.name} (${i.qty})`).join(', ')}</p>
+                        <p class="text-xs text-gray-400 mt-1 whitespace-normal sm:truncate">${bill.items.map(i => `${i.name} (${i.qty})`).join(', ')}</p>
                     </div>
-                    <div class="flex items-center gap-3 shrink-0">
-                        <span class="font-bold text-white">₹${bill.total}</span>
-                        <div class="flex gap-1">
-                            <button onclick="printReceipt('${id}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold border border-blue-600/30 transition">Print</button>
-                            <button onclick="loadBillBackToCart('${id}')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-gray-700 transition">Edit</button>
-                            <button onclick="settleBillClearance('${id}')" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold border border-emerald-600/30 transition">Settle</button>
+                    
+                    <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t border-gray-800/60 pt-2.5 sm:pt-0 sm:border-0 shrink-0">
+                        <span class="font-bold text-white text-base">₹${bill.total}</span>
+                        <div class="flex gap-1.5">
+                            <button onclick="printReceipt('${id}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-blue-600/30 transition active:scale-95">Print</button>
+                            <button onclick="loadBillBackToCart('${id}')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg text-xs font-semibold border border-gray-700 transition active:scale-95">Edit</button>
+                            <button onclick="settleBillClearance('${id}')" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-emerald-600/30 transition active:scale-95">Settle</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
-            }
 
             // Optional notice if the filter is active
             if (filterOperator && renderedCount > 0) {
@@ -691,64 +692,65 @@
                 }
             }
         }
-        async function printReceipt(billId) {
-            firebase.database().ref(`bills/${billId}`).once('value', async (snapshot) => {
-                const bill = snapshot.val();
-                if (!bill) {
-                    alert("Bill data not found!");
-                    return;
+       async function printReceipt(billId) {
+            try {
+                // 1. Move Bluetooth connection to the TOP (directly under the user click gesture context)
+                if (!window.printerChar) {
+                    const device = await navigator.bluetooth.requestDevice({ 
+                        filters: [{ name: 'SR588' }, { namePrefix: 'SR' }], 
+                        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] 
+                    });
+                    const server = await device.gatt.connect();
+                    const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                    window.printerChar = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
                 }
 
-                try {
-                    // Connect to Bluetooth thermal printer using your hardware specifications
-                    if (!printerChar) {
-                        const device = await navigator.bluetooth.requestDevice({ 
-                            filters: [{ name: 'SR588' }, { namePrefix: 'SR' }], 
-                            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] 
-                        });
-                        const server = await device.gatt.connect();
-                        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-                        printerChar = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                // 2. Fetch the data from Firebase safely AFTER the printer link is secured
+                firebase.database().ref(`bills/${billId}`).once('value', async (snapshot) => {
+                    const bill = snapshot.val();
+                    if (!bill) {
+                        alert("Bill data not found!");
+                        return;
                     }
 
                     const enc = new TextEncoder();
                     
-                    // Initialize printer & align center
-                    await printerChar.writeValue(new Uint8Array([0x1B, 0x40, 0x1B, 0x61, 0x01]));
-                    await printerChar.writeValue(enc.encode("THE CHINESE TABLE\n"));
-                    await printerChar.writeValue(enc.encode("SHOP 4, GROUND FLOOR, LANE 1\n"));
-                    await printerChar.writeValue(enc.encode("NEAR APOORVA GYM, KOLDONGRI\n"));
-                    await printerChar.writeValue(enc.encode("ANDHERI EAST, MUMBAI 400069\n"));
-                    await printerChar.writeValue(enc.encode("Mob: 7045149471\n"));
-                    await printerChar.writeValue(enc.encode(`TABLE: ${bill.table} | STAFF: ${bill.operator}\n`));
-                    await printerChar.writeValue(enc.encode(`${bill.timestampStr || new Date().toLocaleString("en-IN")}\n`));
-                    await printerChar.writeValue(enc.encode("--------------------------------\n"));
+                    // Initialize printer hardware & align center
+                    await window.printerChar.writeValue(new Uint8Array([0x1B, 0x40, 0x1B, 0x61, 0x01]));
+                    await window.printerChar.writeValue(enc.encode("THE CHINESE TABLE\n"));
+                    await window.printerChar.writeValue(enc.encode("SHOP 4, GROUND FLOOR, LANE 1\n"));
+                    await window.printerChar.writeValue(enc.encode("NEAR APOORVA GYM, KOLDONGRI\n"));
+                    await window.printerChar.writeValue(enc.encode("ANDHERI EAST, MUMBAI 400069\n"));
+                    await window.printerChar.writeValue(enc.encode("Mob: 7045149471\n"));
+                    await window.printerChar.writeValue(enc.encode(`TABLE: ${bill.table} | STAFF: ${bill.operator}\n`));
+                    await window.printerChar.writeValue(enc.encode(`${bill.timestampStr || new Date().toLocaleString("en-IN")}\n`));
+                    await window.printerChar.writeValue(enc.encode("--------------------------------\n"));
                     
-                    // Align left for items list
-                    await printerChar.writeValue(new Uint8Array([0x1B, 0x61, 0x00]));
+                    // Align left for items list formatting
+                    await window.printerChar.writeValue(new Uint8Array([0x1B, 0x61, 0x00]));
 
-                    // Loop and format menu items
+                    // Loop and stream menu items to the buffer
                     for (let item of bill.items) {
                         const itemLine = `${item.qty}x ${item.name}`;
                         const lineText = itemLine.substring(0, 20).padEnd(20);
                         const linePrice = (item.price * item.qty).toString().padStart(11);
                         
-                        await printerChar.writeValue(enc.encode(`${lineText} ${linePrice}\n`));
+                        await window.printerChar.writeValue(enc.encode(`${lineText} ${linePrice}\n`));
                         if (item.note) {
-                            await printerChar.writeValue(enc.encode(`  >> ${item.note.substring(0, 28)}\n`));
+                            await window.printerChar.writeValue(enc.encode(`  >> ${item.note.substring(0, 28)}\n`));
                         }
                     }
 
                     // Bottom Total Block
-                    await printerChar.writeValue(enc.encode("--------------------------------\n"));
+                    await window.printerChar.writeValue(enc.encode("--------------------------------\n"));
                     const grandTotalStr = bill.total.toString().padStart(11);
-                    await printerChar.writeValue(enc.encode(`TOTAL:              RS. ${grandTotalStr}\n\n\n\n\n`));
+                    await window.printerChar.writeValue(enc.encode(`TOTAL:              RS. ${grandTotalStr}\n\n\n\n\n`));
+                });
 
-                } catch (e) { 
-                    alert("Printer Error: " + e.message); 
-                    printerChar = null; 
-                }
-            });
+            } catch (e) { 
+                alert("Printer Error: " + e.message); 
+                window.printerChar = null; 
+            }
         }
         function sendEmailReport() {
             // 1. Verify Manager Access (Change "1234" to your actual PIN!)
