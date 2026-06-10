@@ -427,6 +427,7 @@
 
         // 📋 DYNAMIC VERTICALLY STACKED CATEGORIZATION PARSER ENGINE
        // 📋 DYNAMIC VERTICALLY STACKED CATEGORIZATION PARSER ENGINE
+       // 📋 DYNAMIC VERTICALLY STACKED CATEGORIZATION PARSER ENGINE
         function renderMenu() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
@@ -457,8 +458,9 @@
 
                 // Generate full-width section title row breaks
                 const sectionHeader = document.createElement('div');
-                sectionHeader.className = "col-span-full mt-4 mb-1";
-                sectionHeader.innerHTML = `<h3 class="text-xs font-black text-red-600 uppercase tracking-widest border-b border-zinc-800 pb-1">${menuCategories[catKey]}</h3>`;
+                sectionHeader.className = "col-span-full mt-6 mb-2";
+                // 🌟 UPDATED: Changed from text-xs to text-lg and increased pb padding for a larger visual break
+                sectionHeader.innerHTML = `<h3 class="text-lg font-black text-red-600 uppercase tracking-wide border-b border-zinc-800 pb-1.5">${menuCategories[catKey]}</h3>`;
                 container.appendChild(sectionHeader);
 
                 // Inject child item arrays neatly within columns under their parent category heading
@@ -469,7 +471,6 @@
                     const qty = isInCart ? cartItem.qty : 0;
 
                     const btn = document.createElement('button');
-                    // Dynamic Style: Swaps border to brand red and adds micro-glow ring if item is active
                     btn.className = `text-left p-3 rounded-xl border transition active:scale-[0.95] flex flex-col justify-between h-24 shadow-sm relative ${
                         isInCart 
                         ? 'bg-zinc-800/60 border-red-600 ring-1 ring-red-600/20' 
@@ -487,7 +488,6 @@
                 });
             }
         }
-
         function addToCart(item) {
             const existing = cart.find(i => i.id === item.id);
             if (existing) { existing.qty++; } else { cart.push({ ...item, qty: 1 }); }
