@@ -691,66 +691,63 @@
                 }
             }
         }
-        function printReceipt(billId) {
-            firebase.database().ref(`bills/${billId}`).once('value', (snapshot) => {
+        async function printReceipt(billId) {
+            firebase.database().ref(`bills/${billId}`).once('value', async (snapshot) => {
                 const bill = snapshot.val();
-                if (!bill) return;
+                if (!bill) {
+                    alert("Bill data not found!");
+                    return;
+                }
 
-                // Create a temporary window formatted specifically for thermal printers
-                const printWindow = window.open('', '_blank', 'width=400,height=600');
-                
-                let itemsHtml = '';
-                bill.items.forEach(item => {
-                    itemsHtml += `
-                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px;">
-                            <span>${item.qty}x ${item.name}</span>
-                            <span>₹${item.price * item.qty}</span>
-                        </div>
-                        ${item.note ? `<div style="font-size: 10px; font-style: italic; margin-bottom: 4px;">- ${item.note}</div>` : ''}
-                    `;
-                });
+                try {
+                    // Connect to Bluetooth thermal printer using your hardware specifications
+                    if (!printerChar) {
+                        const device = await navigator.bluetooth.requestDevice({ 
+                            filters: [{ name: 'SR588' }, { namePrefix: 'SR' }], 
+                            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] 
+                        });
+                        const server = await device.gatt.connect();
+                        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                        printerChar = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                    }
 
-                printWindow.document.write(`
-                    <html>
-                    <head>
-                        <title>Receipt - Table ${bill.table}</title>
-                        <style>
-                            body { font-family: monospace; width: 100%; margin: 0; padding: 10px; color: #000; }
-                            .center { text-align: center; }
-                            .bold { font-weight: bold; }
-                            .divider { border-bottom: 1px dashed #000; margin: 8px 0; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="center bold" style="font-size: 16px;">THE CHINESE TABLE</div>
-                        <div class="center" style="font-size: 12px;">Andheri East, Mumbai</div>
-                        <div class="divider"></div>
-                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
-                        <span>Table: ${bill.table}</span>
-                        <span>Staff: ${bill.operator}</span>
-                    </div>
-                    <div style="font-size: 10px; margin-top: 2px;">Date: ${bill.timestampStr || new Date().toLocaleString("en-IN")}</div>
-                    <div class="divider"></div>
-                        ${itemsHtml}
-                        <div class="divider"></div>
-                        <div style="display: flex; justify-content: space-between; font-size: 14px;" class="bold">
-                            <span>TOTAL</span>
-                            <span>₹${bill.total}</span>
-                        </div>
-                        <div class="divider"></div>
-                        <div class="center" style="font-size: 10px;">Thank you for dining with us!</div>
-                    </body>
-                    </html>
-                `);
-                
-                printWindow.document.close();
-                printWindow.focus();
-                
-                // Trigger the device's print dialog, then close the temp window
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 500);
+                    const enc = new TextEncoder();
+                    
+                    // Initialize printer & align center
+                    await printerChar.writeValue(new Uint8Array([0x1B, 0x40, 0x1B, 0x61, 0x01]));
+                    await printerChar.writeValue(enc.encode("THE CHINESE TABLE\n"));
+                    await printerChar.writeValue(enc.encode("SHOP 4, GROUND FLOOR, LANE 1\n"));
+                    await printerChar.writeValue(enc.encode("NEAR APOORVA GYM, KOLDONGRI\n"));
+                    await printerChar.writeValue(enc.encode("ANDHERI EAST, MUMBAI 400069\n"));
+                    await printerChar.writeValue(enc.encode("Mob: 7045149471\n"));
+                    await printerChar.writeValue(enc.encode(`TABLE: ${bill.table} | STAFF: ${bill.operator}\n`));
+                    await printerChar.writeValue(enc.encode(`${bill.timestampStr || new Date().toLocaleString("en-IN")}\n`));
+                    await printerChar.writeValue(enc.encode("--------------------------------\n"));
+                    
+                    // Align left for items list
+                    await printerChar.writeValue(new Uint8Array([0x1B, 0x61, 0x00]));
+
+                    // Loop and format menu items
+                    for (let item of bill.items) {
+                        const itemLine = `${item.qty}x ${item.name}`;
+                        const lineText = itemLine.substring(0, 20).padEnd(20);
+                        const linePrice = (item.price * item.qty).toString().padStart(11);
+                        
+                        await printerChar.writeValue(enc.encode(`${lineText} ${linePrice}\n`));
+                        if (item.note) {
+                            await printerChar.writeValue(enc.encode(`  >> ${item.note.substring(0, 28)}\n`));
+                        }
+                    }
+
+                    // Bottom Total Block
+                    await printerChar.writeValue(enc.encode("--------------------------------\n"));
+                    const grandTotalStr = bill.total.toString().padStart(11);
+                    await printerChar.writeValue(enc.encode(`TOTAL:              RS. ${grandTotalStr}\n\n\n\n\n`));
+
+                } catch (e) { 
+                    alert("Printer Error: " + e.message); 
+                    printerChar = null; 
+                }
             });
         }
         function sendEmailReport() {
