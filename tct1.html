@@ -8,6 +8,29 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        /* Force background black and default text white */
+        body { background-color: #000000 !important; color: #ffffff !important; }
+        
+        /* Turn main headings into bold, italicized brand red */
+        h1, h2, h3, h2 span, h1 span { color: #dc2626 !important; font-weight: 900 !important; font-style: italic !important; }
+        
+        /* Overhaul gray containers into premium zinc/black cards */
+        .bg-gray-800, .bg-zinc-900 { background-color: #121214 !important; border-color: #27272a !important; }
+        .bg-gray-900\/50, .bg-black\/40 { background-color: #09090b !important; border-color: #1c1c1e !important; }
+        
+        /* Force small layout notes, descriptions, and op indicators to clean white */
+        p, .text-gray-400, .text-white\/60, .text-xs { color: #ffffff !important; opacity: 0.75; }
+        
+        /* Convert table tags and order prices from orange/amber to red */
+        .text-amber-500, .text-amber-500\/80, #cart-total, [id^="table-"] { color: #ef4444 !important; }
+        .bg-amber-500 { background-color: #dc2626 !important; color: #ffffff !important; }
+        .bg-amber-500:hover { background-color: #b91c1c !important; }
+        
+        /* Keep indicators visible */
+        .text-emerald-400, #dashboard-total-revenue { color: #34d399 !important; opacity: 1 !important; }
+        .bg-green-500 { background-color: #22c55e !important; }
+    </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
 
@@ -84,10 +107,19 @@
 
             <div class="lg:col-span-5 space-y-6">
                 <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex flex-col h-[450px]">
-                    <h2 class="text-lg font-bold mb-3 text-gray-200 flex justify-between items-center">
+                   <h2 class="text-lg font-bold mb-3 text-white flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800 pb-2">
                         <span>Current Order</span>
-                        <input type="text" id="table-number" placeholder="Table #" class="w-20 bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-center text-sm font-bold text-amber-500 focus:outline-none focus:border-amber-500">
+                        <div class="flex items-center gap-2">
+                            <button id="delivery-toggle-btn" onclick="toggleDeliveryMode()" class="bg-zinc-900 text-white/80 border border-zinc-700 hover:border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition">
+                                🏍️ Delivery
+                            </button>
+                            <input type="text" id="table-number" placeholder="Table #" class="w-16 bg-black border border-zinc-700 rounded-lg px-2 py-1 text-center text-sm font-bold text-red-500 focus:outline-none focus:border-red-600">
+                        </div>
                     </h2>
+                    
+                    <div id="address-bar-container" class="hidden mb-3">
+                        <textarea id="delivery-address" placeholder="Enter full delivery address and customer contact..." class="w-full bg-black border border-zinc-700 focus:border-red-600 rounded-xl p-2.5 text-xs text-white outline-none resize-none h-16 transition shadow-inner"></textarea>
+                    </div>
                     
                     <div id="cart-items" class="flex-1 overflow-y-auto space-y-2 pr-1 text-sm">
                         <p class="text-gray-500 italic text-center pt-12">Cart is empty. Select items to begin.</p>
@@ -500,7 +532,7 @@
             document.getElementById('cart-total').innerText = total;
         }
 
-        function handleSaveBill() {
+       function handleSaveBill() {
             const tableNum = document.getElementById('table-number').value.trim();
             if (!tableNum) {
                 alert("Please assign a Table Number before locking the order.");
@@ -514,27 +546,28 @@
             const user = firebase.auth().currentUser;
             const total = parseInt(document.getElementById('cart-total').innerText);
             
-           const orderPayload = {
+            const orderPayload = {
                 table: tableNum,
                 items: cart,
                 total: total,
                 operator: user.displayName || user.email,
-                timestampStr: new Date().toLocaleString("en-IN"), // Generates DD/MM/YYYY, hh:mm am/pm
+                isDelivery: isDeliveryModeActive,
+                address: isDeliveryModeActive ? document.getElementById('delivery-address').value.trim() : "",
+                timestampStr: new Date().toLocaleString("en-IN"), 
                 updatedAt: firebase.database.ServerValue.TIMESTAMP
             };
 
-            // Unified Node Writing
             firebase.database().ref(`bills/Table_${tableNum}`).set(orderPayload)
                 .then(() => {
                     cart = [];
                     document.getElementById('table-number').value = '';
+                    if (isDeliveryModeActive) toggleDeliveryMode(); // Auto-reset delivery mode fields
                     updateCartUI();
                 })
                 .catch(err => alert("Sync Failure: " + err.message));
         }
-
-     function renderSavedBillsDashboard(bills, filterOperator = null) {
-            window.lastKnownBills = bills; // Save the database state for the filter button
+    function renderSavedBillsDashboard(bills, filterOperator = null) {
+            window.lastKnownBills = bills;
 
             const container = document.getElementById('global-bills-container');
             const countTracker = document.getElementById('dashboard-bill-count');
@@ -542,9 +575,8 @@
             const statsPanel = document.getElementById('staff-performance-panel');
             const statsContainer = document.getElementById('staff-stats-container');
 
-            // 1. Reset everything if the restaurant is empty
             if (!bills) {
-                container.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
+                container.innerHTML = `<p class="text-white/40 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
                 if (countTracker) countTracker.innerText = '0';
                 if (revenueTracker) revenueTracker.innerText = '0';
                 if (statsPanel) statsPanel.classList.add('hidden');
@@ -558,10 +590,8 @@
             let totalRevenue = 0;
             let operatorStats = {};
 
-            // 2. Crunch the numbers for the whole restaurant and each staff member
             for (let id in bills) {
                 const bill = bills[id];
-                
                 totalBillsCount++;
                 totalRevenue += bill.total;
 
@@ -573,50 +603,45 @@
                 operatorStats[opName].revenue += bill.total;
             }
 
-            // 3. Render the specific bills (applying the staff filter if you clicked 'View')
             let renderedCount = 0;
             for (let id in bills) {
                 const bill = bills[id];
-                
-                // Skip this bill if we are filtering for a specific staff member
                 if (filterOperator && bill.operator !== filterOperator) continue; 
                 renderedCount++;
 
                 const div = document.createElement('div');
-                div.className = "bg-gray-900/40 border border-gray-800 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-sm hover:border-gray-700 transition";
+                div.className = "bg-black border border-zinc-800 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-sm hover:border-zinc-700 transition";
                 div.innerHTML = `
                     <div class="truncate w-full sm:w-auto">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-amber-500 text-base">Table ${bill.table}</span>
-                            <span class="text-[10px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded border border-gray-700 truncate">Op: ${bill.operator}</span>
+                            <span class="font-bold text-red-500 text-base">Table ${bill.table}</span>
+                            <span class="text-[10px] bg-zinc-900 text-white/70 px-1.5 py-0.5 rounded border border-zinc-800 truncate">Op: ${bill.operator}</span>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1 whitespace-normal sm:truncate">${bill.items.map(i => `${i.name} (${i.qty})`).join(', ')}</p>
+                        ${bill.isDelivery && bill.address ? `<p class="text-xs text-red-500 font-bold mt-1 bg-red-950/20 border border-red-900/40 p-1.5 rounded-lg whitespace-normal">📍 Delivery Address: ${bill.address}</p>` : ''}
+                        <p class="text-xs text-white/60 mt-1 whitespace-normal sm:truncate">${bill.items.map(i => `${i.name} (${i.qty})`).join(', ')}</p>
                     </div>
                     
-                    <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t border-gray-800/60 pt-2.5 sm:pt-0 sm:border-0 shrink-0">
+                    <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t border-zinc-800/60 pt-2.5 sm:pt-0 sm:border-0 shrink-0">
                         <span class="font-bold text-white text-base">₹${bill.total}</span>
                         <div class="flex gap-1.5">
                             <button onclick="printReceipt('${id}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-blue-600/30 transition active:scale-95">Print</button>
-                            <button onclick="loadBillBackToCart('${id}')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg text-xs font-semibold border border-gray-700 transition active:scale-95">Edit</button>
+                            <button onclick="loadBillBackToCart('${id}')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-2 rounded-lg text-xs font-semibold border border-zinc-700 transition active:scale-95">Edit</button>
                             <button onclick="settleBillClearance('${id}')" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-emerald-600/30 transition active:scale-95">Settle</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
-            } // <-- Fixed: This loop closing bracket was missing!
-
-            // Optional notice if the filter is active
-            if (filterOperator && renderedCount > 0) {
-                container.insertAdjacentHTML('afterbegin', `<div class="bg-amber-900/30 border border-amber-500/30 text-amber-400 text-xs text-center p-2 rounded-lg mb-2">Showing active tables only for: <b>${filterOperator}</b></div>`);
-            } else if (filterOperator && renderedCount === 0) {
-                container.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">No active tables for ${filterOperator}.</p>`;
             }
 
-            // 4. Update the Master Totals Box
+            if (filterOperator && renderedCount > 0) {
+                container.insertAdjacentHTML('afterbegin', `<div class="bg-red-950/40 border border-red-600/30 text-red-400 text-xs text-center p-2 rounded-lg mb-2">Showing active tables only for: <b>${filterOperator}</b></div>`);
+            } else if (filterOperator && renderedCount === 0) {
+                container.innerHTML = `<p class="text-white/40 italic text-sm text-center py-4">No active tables for ${filterOperator}.</p>`;
+            }
+
             if (countTracker) countTracker.innerText = totalBillsCount;
             if (revenueTracker) revenueTracker.innerText = totalRevenue;
 
-            // 5. Build the Top Staff Dashboard UI
             if (statsContainer) {
                 statsContainer.innerHTML = '';
                 for (let op in operatorStats) {
@@ -624,12 +649,12 @@
                     const isFiltered = (filterOperator === op); 
                     
                     statsContainer.innerHTML += `
-                        <div class="${isFiltered ? 'bg-amber-900/30 border-amber-500/50' : 'bg-gray-900/50 border-gray-700'} border p-3 rounded-xl flex justify-between items-center transition">
+                        <div class="${isFiltered ? 'bg-red-950/40 border-red-600/50' : 'bg-black border-zinc-800'} border p-3 rounded-xl flex justify-between items-center transition">
                             <div class="truncate pr-2">
                                 <p class="font-bold text-white text-sm truncate">${op}</p>
-                                <p class="text-xs text-emerald-400 font-bold mt-0.5">₹${stat.revenue} <span class="text-gray-500 font-normal">(${stat.count} bills)</span></p>
+                                <p class="text-xs text-emerald-400 font-bold mt-0.5">₹${stat.revenue} <span class="text-white/50 font-normal">(${stat.count} bills)</span></p>
                             </div>
-                            <button onclick="renderSavedBillsDashboard(window.lastKnownBills, '${op}')" class="${isFiltered ? 'bg-amber-500 hover:bg-amber-600 text-gray-900' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'} px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-600 transition shrink-0">
+                            <button onclick="renderSavedBillsDashboard(window.lastKnownBills, '${op}')" class="${isFiltered ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-zinc-900 hover:bg-zinc-800 text-white'} px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-700 transition shrink-0">
                                 ${isFiltered ? 'Viewing' : 'View'}
                             </button>
                         </div>
@@ -637,7 +662,6 @@
                 }
             }
         }
-
         function loadBillBackToCart(id) {
             const pin = prompt("Enter Manager PIN to edit this bill:");
             if (pin !== "7045") {
@@ -816,6 +840,50 @@
             if (confirm(`Are you sure you want to lock out ${staffName}? Their terminal will instantly shut down.`)) {
                 // Change status to "revoked" to make them disappear completely
                 firebase.database().ref(`users/${uid}`).update({ approved: "revoked" });
+            }
+        }
+        let isDeliveryModeActive = false;
+
+        function toggleDeliveryMode() {
+            isDeliveryModeActive = !isDeliveryModeActive;
+            const btn = document.getElementById('delivery-toggle-btn');
+            const addressBox = document.getElementById('address-bar-container');
+            const tableInput = document.getElementById('table-number');
+
+            if (isDeliveryModeActive) {
+                // Turn button red, expose address block, alter default table field
+                btn.className = "bg-red-600 text-white border border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
+                addressBox.classList.remove('hidden');
+                tableInput.value = "DEL";
+                document.getElementById('delivery-address').focus();
+            } else {
+                // Reset layout parameters back to default standard dine-in tracking
+                btn.className = "bg-zinc-900 text-white/80 border border-zinc-700 hover:border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
+                addressBox.classList.add('hidden');
+                tableInput.value = "";
+                document.getElementById('delivery-address').value = "";
+            }
+        }
+        let isDeliveryModeActive = false;
+
+        function toggleDeliveryMode() {
+            isDeliveryModeActive = !isDeliveryModeActive;
+            const btn = document.getElementById('delivery-toggle-btn');
+            const addressBox = document.getElementById('address-bar-container');
+            const tableInput = document.getElementById('table-number');
+
+            if (isDeliveryModeActive) {
+                // Style button red, expose address block, alter default table field
+                btn.className = "bg-red-600 text-white border border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
+                addressBox.classList.remove('hidden');
+                tableInput.value = "DEL";
+                document.getElementById('delivery-address').focus();
+            } else {
+                // Reset layout parameters back to standard dine-in tracking
+                btn.className = "bg-zinc-900 text-white/80 border border-zinc-700 hover:border-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition";
+                addressBox.classList.add('hidden');
+                tableInput.value = "";
+                document.getElementById('delivery-address').value = "";
             }
         }
     </script>
