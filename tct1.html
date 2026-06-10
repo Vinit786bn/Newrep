@@ -340,9 +340,20 @@
             }
         });
 
-        function loginWithGoogle() {
+       function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).catch((err) => alert("Authentication Error: " + err.message));
+            firebase.auth().signInWithPopup(provider).then((result) => {
+                // If a revoked user logs back in, reset them so they pop up on the manager's screen again
+                firebase.database().ref(`users/${result.user.uid}`).once('value', (snapshot) => {
+                    const userData = snapshot.val();
+                    if (userData && userData.approved === "revoked") {
+                        firebase.database().ref(`users/${result.user.uid}`).update({
+                            approved: false,
+                            requestedAt: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    }
+                });
+            }).catch((err) => alert("Authentication Error: " + err.message));
         }
 
         function logoutUser() {
@@ -362,6 +373,8 @@
                 for (let uid in users) {
                     // Do not show the Master Admin in this list
                     if (users[uid].email === ADMIN_EMAIL) continue;
+                    // Do not show staff who have been revoked (make them disappear)
+                    if (users[uid].approved === "revoked") continue;
 
                     count++;
                     const isApproved = users[uid].approved;
@@ -797,7 +810,7 @@
                 window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
             });
         }
-        function revokeStaff(uid, staffName) {
+       function revokeStaff(uid, staffName) {
             // Check Manager PIN (Remember to change "1234" to your actual PIN!)
             const pin = prompt(`CRITICAL ACTION: Enter Manager PIN to revoke POS access for ${staffName}:`);
             if (pin !== "1234") {
@@ -806,8 +819,8 @@
             }
 
             if (confirm(`Are you sure you want to lock out ${staffName}? Their terminal will instantly shut down.`)) {
-                // This instantly changes their database status, forcing their screen to the Waiting Room
-                firebase.database().ref(`users/${uid}`).update({ approved: false });
+                // Change status to "revoked" to make them disappear completely
+                firebase.database().ref(`users/${uid}`).update({ approved: "revoked" });
             }
         }
     </script>
