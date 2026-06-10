@@ -95,7 +95,12 @@
                 </div>
 
                 <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-                    <h2 class="text-lg font-bold mb-3 text-gray-200">Live Active Tables</h2>
+                   <div class="flex justify-between items-center mb-3">
+    <h2 class="text-lg font-bold text-gray-200">Live Active Tables</h2>
+    <button onclick="settleAllBills()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-red-600/30 transition">
+        Settle All
+    </button>
+</div>
                     <div class="flex justify-between items-center bg-gray-900/80 p-3 rounded-xl mb-3 border border-gray-700 shadow-inner">
     <div>
         <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Active Bills</p>
@@ -536,6 +541,12 @@
         }
 
         function loadBillBackToCart(id) {
+            const pin = prompt("Enter Manager PIN to edit this bill:");
+            if (pin !== "7045") {
+                alert("Incorrect PIN. Access denied.");
+                return;
+            }
+
             firebase.database().ref(`bills/${id}`).once('value', (snapshot) => {
                 const bill = snapshot.val();
                 if (bill) {
@@ -547,8 +558,26 @@
         }
 
         function settleBillClearance(id) {
+            const pin = prompt("Enter Manager PIN to settle this table:");
+            if (pin !== "7045") {
+                alert("Incorrect PIN. Access denied.");
+                return;
+            }
+
             if (confirm("Confirm settlement and archive this order?")) {
                 firebase.database().ref(`bills/${id}`).remove();
+            }
+        }
+
+        function settleAllBills() {
+            const pin = prompt("CRITICAL ACTION: Enter Manager PIN to SETTLE ALL tables:");
+            if (pin !== "7045") {
+                alert("Incorrect PIN. Access denied.");
+                return;
+            }
+
+            if (confirm("WARNING: This will instantly clear ALL active tables and revenue. Are you sure?")) {
+                firebase.database().ref('bills').remove();
             }
         }
        function addDishNote(id) {
