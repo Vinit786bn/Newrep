@@ -103,40 +103,36 @@
                         </button>
                     </div>
                 </div>
-
-                       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-            <div class="flex justify-between items-center mb-3">
+<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <h2 class="text-lg font-bold text-gray-200">Live Active Tables</h2>
-              <div class="flex gap-2">
-    <div class="flex gap-2">
-        <button onclick="sendEmailReport()" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-600/30 transition">
-            Email Report
-        </button>
-        <button onclick="settleAllBills()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-red-600/30 transition">
-            Settle All
-        </button>
-    </div>
-</div>
-                    <div class="flex justify-between items-center bg-gray-900/80 p-3 rounded-xl mb-3 border border-gray-700 shadow-inner">
-    <div>
-        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Active Bills</p>
-        <p class="text-2xl font-black text-white leading-none mt-1" id="dashboard-bill-count">0</p>
-    </div>
-    <div class="text-right">
-        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Live Revenue</p>
-        <p class="text-2xl font-black text-emerald-400 leading-none mt-1">₹<span id="dashboard-total-revenue">0</span></p>
-    </div>
-</div>
-                    <div id="global-bills-container" class="space-y-2 max-h-[300px] overflow-y-auto">
-                        <p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>
-                    </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="sendEmailReport()" class="flex-1 sm:flex-none text-center bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-blue-600/30 transition active:scale-95">
+                        Email Report
+                    </button>
+                    <button onclick="settleAllBills()" class="flex-1 sm:flex-none text-center bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-red-600/30 transition active:scale-95">
+                        Settle All
+                    </button>
                 </div>
-
             </div>
+
+            <div class="flex justify-between items-center bg-gray-900/80 p-3 rounded-xl mb-3 border border-gray-700 shadow-inner">
+                <div>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Active Bills</p>
+                    <p class="text-2xl font-black text-white leading-none mt-1" id="dashboard-bill-count">0</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Live Revenue</p>
+                    <p class="text-2xl font-black text-emerald-400 leading-none mt-1">₹<span id="dashboard-total-revenue">0</span></p>
+                </div>
+            </div>
+
+            <div id="global-bills-container" class="space-y-2 max-h-[300px] overflow-y-auto">
+                <p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>
+            </div>
+
         </div>
-    </div>
-
-
     <script>
         // !!! IMPORTANT: PASTE YOUR EXACT FIREBASE CONFIGURATION COPIED FROM YOUR FIREBASE CONSOLE HERE !!!
         const firebaseConfig = {
