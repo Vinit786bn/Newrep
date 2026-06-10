@@ -34,17 +34,30 @@
 </head>
 <body class="bg-black text-white min-h-screen font-sans">
 
-    <div id="login-screen" class="fixed inset-0 bg-black flex flex-col items-center justify-center p-6 z-50">
-        <div class="bg-zinc-900 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-zinc-800">
+   <div id="login-screen" class="fixed inset-0 bg-black flex flex-col items-center justify-center p-6 z-50">
+        <div class="bg-zinc-900 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-red-600/40">
             <h1 class="text-3xl font-extrabold text-red-600 mb-2 tracking-wide uppercase italic">The Chinese Table</h1>
-            <p class="text-white text-xs mb-8 uppercase tracking-widest opacity-80">Unified Restaurant POS Terminal</p>
+            <p class="text-white text-xs mb-6 uppercase tracking-widest opacity-80">Unified Restaurant POS Terminal</p>
             
-            <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md">
+            <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md mb-4 text-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.227C18.241 1.483 15.42 0 12.24 0 5.48 0 0 5.48 0 12s5.48 12 12.24 12c7.05 0 11.748-4.956 11.748-11.96 0-.802-.085-1.415-.188-1.755H12.24z"/>
                 </svg>
                 Sign in with Google
             </button>
+
+            <div class="relative flex py-2 items-center justify-center mb-4">
+                <div class="border-t border-zinc-800 w-full"></div>
+                <span class="absolute bg-zinc-900 px-3 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Or iPhone Sign-In</span>
+            </div>
+
+            <div class="space-y-3 text-left">
+                <input type="email" id="auth-email" placeholder="Staff Email Address" class="w-full bg-black border border-zinc-800 focus:border-red-600 rounded-xl p-3 text-sm text-white outline-none transition">
+                <input type="password" id="auth-password" placeholder="Terminal Security Password" class="w-full bg-black border border-zinc-800 focus:border-red-600 rounded-xl p-3 text-sm text-white outline-none transition" onkeydown="if(event.key==='Enter')loginWithPassword()">
+                <button onclick="loginWithPassword()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition duration-150 uppercase tracking-wider text-xs">
+                    Login Natively
+                </button>
+            </div>
         </div>
     </div>
 
@@ -353,19 +366,20 @@
             }
         });
 
-        function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then((result) => {
-                firebase.database().ref(`users/${result.user.uid}`).once('value', (snapshot) => {
-                    const userData = snapshot.val();
-                    if (userData && userData.approved === "revoked") {
-                        firebase.database().ref(`users/${result.user.uid}`).update({
-                            approved: false,
-                            requestedAt: firebase.database.ServerValue.TIMESTAMP
-                        });
-                    }
+        function loginWithPassword() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+
+            if (!email || !password) {
+                alert("Please complete both Email and Password fields.");
+                return;
+            }
+
+            // Direct API handshake bypassing popups entirely
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .catch((err) => {
+                    alert("Sign-In Refused: " + err.message);
                 });
-            }).catch((err) => alert("Authentication Error: " + err.message));
         }
 
         function logoutUser() {
