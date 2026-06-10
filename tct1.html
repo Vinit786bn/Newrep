@@ -84,8 +84,8 @@
             <div id="staff-stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3"></div>
         </div>
 
-        <div id="admin-panel" class="hidden bg-zinc-900/50 border border-red-600/30 p-4 rounded-2xl mb-6 shadow-xl">
-            <h3 class="text-md font-bold text-red-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
+        <div id="admin-panel" class="hidden bg-zinc-900/50 border border-blue-500/30 p-4 rounded-2xl mb-6 shadow-xl">
+            <h3 class="text-md font-bold text-blue-400 mb-3 flex items-center gap-2 uppercase tracking-wide">
                 <span>🛡️ Staff Access Control Dashboard</span>
             </h3>
             <div id="pending-staff-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -97,7 +97,7 @@
             
             <div class="lg:col-span-7 space-y-6">
                 <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                    <h2 class="text-lg font-bold mb-4 text-white uppercase tracking-wide border-b border-zinc-800 pb-2">Menu Items</h2>
+                    <h2 class="text-lg font-bold mb-2 text-white uppercase tracking-wide">Menu Items</h2>
                     <div id="menu-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
                 </div>
             </div>
@@ -386,13 +386,13 @@
                     count++;
                     const isApproved = users[uid].approved;
                     const card = document.createElement('div');
-                    card.className = "flex justify-between items-center bg-gray-700/60 p-3 rounded-xl border border-gray-600";
+                    card.className = "flex justify-between items-center bg-zinc-800 p-3 rounded-xl border border-zinc-700";
                     
                     if (!isApproved) {
                         card.innerHTML = `
                             <div class="truncate mr-2">
-                                <p class="font-bold text-white text-sm truncate">${users[uid].name} <span class="text-xs text-amber-500">(Pending)</span></p>
-                                <p class="text-xs text-gray-400 truncate">${users[uid].email}</p>
+                                <p class="font-bold text-white text-sm truncate">${users[uid].name} <span class="text-xs text-red-500">(Pending)</span></p>
+                                <p class="text-xs text-white/60 truncate">${users[uid].email}</p>
                             </div>
                             <button onclick="approveStaff('${uid}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">Approve</button>
                         `;
@@ -400,7 +400,7 @@
                         card.innerHTML = `
                             <div class="truncate mr-2">
                                 <p class="font-bold text-white text-sm truncate">${users[uid].name} <span class="text-xs text-emerald-400">(Active)</span></p>
-                                <p class="text-xs text-gray-400 truncate">${users[uid].email}</p>
+                                <p class="text-xs text-white/60 truncate">${users[uid].email}</p>
                             </div>
                             <button onclick="revokeStaff('${uid}', '${users[uid].name}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/40 text-xs font-bold px-3 py-2 rounded-lg transition shrink-0 shadow-md">Revoke</button>
                         `;
@@ -408,7 +408,7 @@
                     container.appendChild(card);
                 }
                 if (count === 0) {
-                    container.innerHTML = `<p class="text-gray-500 italic text-sm col-span-full">No staff registered in the system yet.</p>`;
+                    container.innerHTML = `<p class="text-white/40 italic text-sm col-span-full">No staff registered in the system yet.</p>`;
                 }
             });
         }
@@ -425,20 +425,53 @@
             });
         }
 
+        // 📋 DYNAMIC VERTICALLY STACKED CATEGORIZATION PARSER ENGINE
         function renderMenu() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
+            
+            // Map index loops to construct globally unique runtime IDs
             menuData.forEach((item, index) => {
                 item.id = index + 1; 
-                const btn = document.createElement('button');
-                btn.className = "bg-gray-700/40 hover:bg-gray-700 text-left p-3 rounded-xl border border-gray-700 transition active:scale(0.95) flex flex-col justify-between h-24";
-                btn.onclick = () => addToCart(item);
-                btn.innerHTML = `
-                    <span class="font-medium text-sm text-gray-200 leading-snug">${item.name}</span>
-                    <span class="text-amber-500 font-bold text-sm">₹${item.price}</span>
-                `;
-                container.appendChild(btn);
             });
+
+            const menuCategories = {
+                "veg-soup": "Veg Soup 🍲",
+                "nonveg-soup": "Non-Veg Soup 🥣",
+                "veg-starter": "Veg Starters 🥬",
+                "nonveg-starter": "Non-Veg Starters 🍗",
+                "veg-rice": "Veg Rice 🍚",
+                "nonveg-rice": "Non-Veg Rice 🍳",
+                "veg-noodle": "Veg Noodles 🍜",
+                "nonveg-noodle": "Non-Veg Noodles 🍝",
+                "chef-special": "Chef Special ⭐",
+                "combo": "Combos 🍱",
+                "drinks": "Drinks 🥤"
+            };
+
+            // Stream through categories one below another
+            for (let catKey in menuCategories) {
+                const catItems = menuData.filter(item => item.cat === catKey);
+                if (catItems.length === 0) continue; // Skip displaying category row if empty
+
+                // Generate full-width section title row breaks
+                const sectionHeader = document.createElement('div');
+                sectionHeader.className = "col-span-full mt-4 mb-1";
+                sectionHeader.innerHTML = `<h3 class="text-xs font-black text-red-600 uppercase tracking-widest border-b border-zinc-800 pb-1">${menuCategories[catKey]}</h3>`;
+                container.appendChild(sectionHeader);
+
+                // Inject child item arrays neatly within columns under their parent category heading
+                catItems.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-zinc-900 hover:bg-zinc-800 text-left p-3 rounded-xl border border-zinc-800 transition active:scale-[0.95] flex flex-col justify-between h-24 shadow-sm";
+                    btn.onclick = () => addToCart(item);
+                    btn.innerHTML = `
+                        <span class="font-medium text-sm text-white leading-snug">${item.name}</span>
+                        <span class="text-red-500 font-bold text-sm">₹${item.price}</span>
+                    `;
+                    container.appendChild(btn);
+                });
+            }
         }
 
         function addToCart(item) {
@@ -480,7 +513,7 @@
         function updateCartUI() {
             const container = document.getElementById('cart-items');
             if (cart.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 italic text-center pt-12">Cart is empty. Select items to begin.</p>`;
+                container.innerHTML = `<p class="text-white/40 italic text-center pt-12">Cart is empty. Select items to begin.</p>`;
                 document.getElementById('cart-total').innerText = '0';
                 return;
             }
@@ -489,20 +522,20 @@
             cart.forEach(item => {
                 total += item.price * item.qty;
                 const row = document.createElement('div');
-                row.className = "flex justify-between items-center bg-gray-900/50 p-2.5 rounded-xl border border-gray-800";
+                row.className = "flex justify-between items-center bg-black p-2.5 rounded-xl border border-zinc-800";
                 row.innerHTML = `
                     <div class="flex-1 min-w-0 pr-2">
-                        <p class="font-medium text-gray-200 truncate">${item.name}</p>
+                        <p class="font-medium text-white truncate">${item.name}</p>
                         ${item.note ? `<p class="text-[10px] text-blue-400 italic">Note: ${item.note}</p>` : ''}
-                        <p class="text-xs text-amber-500/80">₹${item.price} x ${item.qty}</p>
+                        <p class="text-xs text-red-400">₹${item.price} x ${item.qty}</p>
                     </div>
                     <div class="flex flex-col items-end gap-1">
                         <div class="flex items-center gap-1.5">
-                            <button onclick="updateCartQty(${item.id}, -1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold border border-gray-700 text-gray-300">-</button>
+                            <button onclick="updateCartQty(${item.id}, -1)" class="w-7 h-7 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-bold border border-zinc-700 text-white">-</button>
                             <span class="w-6 text-center text-sm font-semibold">${item.qty}</span>
-                            <button onclick="updateCartQty(${item.id}, 1)" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold border border-gray-700 text-gray-300">+</button>
+                            <button onclick="updateCartQty(${item.id}, 1)" class="w-7 h-7 bg-zinc-900 hover:bg-zinc-800 rounded-lg font-bold border border-zinc-700 text-white">+</button>
                         </div>
-                        <button onclick="addDishNote(${item.id})" class="text-[10px] text-gray-400 hover:text-white bg-gray-800 px-2 py-0.5 rounded border border-gray-700">✏️ Add Note</button>
+                        <button onclick="addDishNote(${item.id})" class="text-[10px] text-white/70 hover:text-white bg-zinc-900 px-2 py-0.5 rounded border border-zinc-700">✏️ Add Note</button>
                     </div>
                 `;
                 container.appendChild(row);
@@ -546,7 +579,7 @@
             const revenueTracker = document.getElementById('dashboard-total-revenue');
             
             if (!bills) {
-                container.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
+                container.innerHTML = `<p class="text-white/40 italic text-sm text-center py-4">No active saved bills across terminals.</p>`;
                 if (countTracker) countTracker.innerText = '0';
                 if (revenueTracker) revenueTracker.innerText = '0';
                 return;
@@ -662,7 +695,7 @@
             const pin = prompt("Enter Manager PIN to generate email report:");
             if (pin !== "7045") { alert("Incorrect PIN. Access denied."); return; }
             
-            const targetEmail = prompt("Enter report destination email:", "vinitbnarule@gmail.com");
+            const targetEmail = prompt("Enter report destination email:", "thechinesetable7045@gmail.com");
             if (!targetEmail) return;
 
             firebase.database().ref('bills').once('value', (snapshot) => {
